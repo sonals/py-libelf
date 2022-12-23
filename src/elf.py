@@ -1,3 +1,11 @@
+"""
+ SPDX-License-Identifier: GPL-3.0-or-later
+
+ Copyright (C) 2022 Advanced Micro Devices, Inc.
+
+ ctypes based Python binding for elf.h
+"""
+
 import ctypes
 
 Elf32_Half = ctypes.c_ushort
@@ -266,6 +274,38 @@ EM_CSKY = 252
 
 EM_NUM = 253
 
+EV_NONE       = 0
+EV_CURRENT    = 1
+EV_NUM        = 2
+
+PT_NULL         = 0
+PT_LOAD         = 1
+PT_DYNAMIC      = 2
+PT_INTERP       = 3
+PT_NOTE         = 4
+PT_SHLIB        = 5
+PT_PHDR         = 6
+PT_TLS          = 7
+PT_NUM          = 8
+PT_LOOS         = 0x60000000
+PT_GNU_EH_FRAME = 0x6474e550
+PT_GNU_STACK    = 0x6474e551
+PT_GNU_RELRO    = 0x6474e552
+PT_GNU_PROPERTY = 0x6474e553
+PT_LOSUNW       = 0x6ffffffa
+PT_SUNWBSS      = 0x6ffffffa
+PT_SUNWSTACK    = 0x6ffffffb
+PT_HISUNW       = 0x6fffffff
+PT_HIOS         = 0x6fffffff
+PT_LOPROC       = 0x70000000
+PT_HIPROC       = 0x7fffffff
+
+PF_X		= (1 << 0)
+PF_W		= (1 << 1)
+PF_R		= (1 << 2)
+PF_MASKOS	= 0x0ff00000
+PF_MASKPROC	= 0xf0000000
+
 class Elf32_Ehdr(ctypes.Structure):
     _fields_ = [
         ("e_ident", ctypes.c_ubyte * EI_NIDENT),
@@ -282,3 +322,28 @@ class Elf32_Ehdr(ctypes.Structure):
         ("e_shentsize", Elf32_Half),
         ("e_shnum", Elf32_Half),
         ("e_shstrndx", Elf32_Half) ]
+
+class Elf32_Phdr(ctypes.Structure):
+    _fields_ = [
+        ("p_type", Elf32_Word),
+        ("p_offset", Elf32_Off),
+        ("p_vaddr", Elf32_Addr),
+        ("p_paddr", Elf32_Addr),
+        ("p_filesz", Elf32_Word),
+        ("p_memsz", Elf32_Word),
+        ("p_flags", Elf32_Word),
+        ("p_align", Elf32_Word) ]
+
+
+class Elf32_Shdr(ctypes.Structure):
+    _fields_ = [
+        ("sh_name", Elf32_Word),
+        ("sh_type", Elf32_Word),
+        ("sh_flags", Elf32_Word),
+        ("sh_addr", Elf32_Addr),
+        ("sh_offset", Elf32_Off),
+        ("sh_size", Elf32_Word),
+        ("sh_link", Elf32_Word),
+        ("sh_info", Elf32_Word),
+        ("sh_addralign", Elf32_Word),
+        ("sh_entsize", Elf32_Word) ]
