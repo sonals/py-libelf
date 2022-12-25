@@ -223,13 +223,13 @@ if __name__ == "__main__":
     data = scn.elf_newdata()
 
     hash_words = (ctypes.c_uint * 3)(0x01234567, 0x89abcdef, 0xdeadc0de)
-    data.d_align = 4
-    data.d_off = 0
-    data.d_buf = hash_words
-    data.d_type = Elf_Type.ELF_T_WORD
-    data.d_size = ctypes.sizeof(hash_words)
-    data.d_type = Elf_Type.ELF_T_BYTE
-    data.d_version = EV_CURRENT
+    data.contents.d_align = 4
+    data.contents.d_off = 0
+    data.contents.d_buf = ctypes.cast(hash_words, ctypes.c_void_p)
+    data.contents.d_type = Elf_Type.ELF_T_WORD
+    data.contents.d_size = ctypes.sizeof(hash_words)
+    data.contents.d_type = Elf_Type.ELF_T_BYTE
+    data.contents.d_version = EV_CURRENT
 
     shdr = scn.elf32_getshdr()
     shdr.contents.sh_name = 1
@@ -241,12 +241,12 @@ if __name__ == "__main__":
     data2 = scn2.elf_newdata()
 
     string_table = (ctypes.c_char * 16)(b'\0' , b'.' ,b'f' , b'o' , b'o' , b'\0' , b'.' , b's' , b'h' , b's' , b't' , b'r' , b't' , b'a' , b'b' , b'\0')
-    data2.d_align = 1
-    data2.d_buf = string_table
-    data2.d_off = 0
-    data2.d_size = ctypes.sizeof(string_table)
-    data2.d_type = Elf_Type.ELF_T_BYTE ;
-    data2.d_version = EV_CURRENT;
+    data2.contents.d_align = 1
+    data2.contents.d_buf = ctypes.cast(string_table, ctypes.c_void_p)
+    data2.contents.d_off = 0
+    data2.contents.d_size = ctypes.sizeof(string_table)
+    data2.contents.d_type = Elf_Type.ELF_T_BYTE ;
+    data2.contents.d_version = EV_CURRENT;
 
     shdr2 = scn2.elf32_getshdr()
     shdr2.contents.sh_name = 6
