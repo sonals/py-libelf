@@ -1,5 +1,5 @@
 """
- SPDX-License-Identifier: GPL-3.0-or-later
+ SPDX-License-Identifier: LGPL-3.0-or-later OR GPL-2.0-or-later
 
  Copyright (C) 2022 Advanced Micro Devices, Inc.
 
@@ -23,7 +23,7 @@ class CtypesEnum(enum.IntEnum):
     def from_param(cls, obj):
         return int(obj)
 
-"""For definition of the enum literals see libelf.h."""
+"""For definition of the enumeration literals see libelf.h."""
 class Elf_Type(CtypesEnum):
     ELF_T_BYTE = 0
     ELF_T_ADDR = 1
@@ -77,10 +77,10 @@ ELF_F_PERMISSIVE = 0x8
 
 class Elf_Kind(CtypesEnum):
     ELF_K_NONE = 0
-    ELF_K_AR = 1
+    ELF_K_AR   = 1
     ELF_K_COFF = 2
-    ELF_K_ELF = 3
-    ELF_K_NUM = 4
+    ELF_K_ELF  = 3
+    ELF_K_NUM  = 4
 
 
 class ElfError(Exception):
@@ -92,7 +92,7 @@ class ElfError(Exception):
     def __str__(self):
         return self.errmsg
 
-def _valueOrError(res):
+def _NotNullOrError(res):
     """
     Validate returned pointer
     """
@@ -115,53 +115,57 @@ class Elf_ScnDescriptor:
         self.scn = scn
 
     def elf32_getshdr(self):
-        return libelf.elf32_getshdr(self.scn)
+        return _NotNullOrError(libelf.elf32_getshdr(self.scn))
 
     def elf_newdata(self):
-        return libelf.elf_newdata(self.scn)
+        return _NotNullOrError(libelf.elf_newdata(self.scn))
 
     def elf_ndxscn(self):
         return libelf.elf_ndxscn(self.scn)
 
 class ElfDescriptor:
+    def _cleanup(self):
+        if (self.elf != None):
+            libelf.elf_end(self.elf)
+        if (self.filehandle != None):
+            self.filehandle.close()
+
     def __init__(self, elf, filehandle = None):
         self.filehandle = filehandle
         self.elf = elf
 
     def __del__(self):
-        libelf.elf_end(self.elf)
-        if (self.filehandle != None):
-            self.filehandle.close()
+        self._cleanup()
 
     @classmethod
     def fromfile(cls, filename, cmd):
         filehandle = open(filename, "wb+")
         elf = libelf.elf_begin(filehandle.fileno(), cmd, None)
-        return cls(elf, filehandle)
+        return cls(_NotNullOrError(elf), filehandle)
 
     @classmethod
     def frommemory(cls, image, size):
         elf = libelf.elf_memory(image, size)
-        return cls(elf)
+        return cls(_NotNullOrError(elf))
 
     def elf_kind(self):
         return libelf.elf_kind(self.elf);
 
     def elf32_newehdr(self):
-        return libelf.elf32_newehdr(self.elf);
+        return _NotNullOrError(libelf.elf32_newehdr(self.elf))
 
     def elf32_newphdr(self, count):
-        return libelf.elf32_newphdr(self.elf, count)
+        return _NotNullOrError(libelf.elf32_newphdr(self.elf, count))
 
     def elf_flagphdr(self, cmd, flags):
-        return libelf.elf_flagphdr(self.elf, cmd, flags)
+        return _NotNullOrError(libelf.elf_flagphdr(self.elf, cmd, flags))
 
     def elf_update(self, cmd):
-        return libelf.elf_update(self.elf, cmd)
+        return _NotNullOrError(libelf.elf_update(self.elf, cmd))
 
     def elf_newscn(self):
         scn = libelf.elf_newscn(self.elf)
-        return Elf_ScnDescriptor(scn)
+        return Elf_ScnDescriptor(_NotNullOrError(scn))
 
 def elf32_fsize(typ, count, version):
     return libelf.elf32_fsize(typ, count, version)
