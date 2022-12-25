@@ -120,6 +120,9 @@ class Elf_ScnDescriptor:
     def elf_newdata(self):
         return libelf.elf_newdata(self.scn)
 
+    def elf_ndxscn(self):
+        return libelf.elf_ndxscn(self.scn)
+
 class ElfDescriptor:
     def __init__(self, elf, filehandle = None):
         self.filehandle = filehandle
@@ -200,6 +203,9 @@ def setup():
     libelf.elf_newdata.restype = ctypes.POINTER(Elf_Data)
     libelf.elf_newdata.argtypes = [ctypes.c_void_p]
 
+    libelf.elf_ndxscn.restype = ctypes.c_size_t
+    libelf.elf_ndxscn.argtypes = [ctypes.c_void_p]
+
     res = libelf.elf_version(1)
 
 if __name__ == "__main__":
@@ -214,23 +220,43 @@ if __name__ == "__main__":
     phdr = melf.elf32_newphdr(1)
 
     scn = melf.elf_newscn()
-
     data = scn.elf_newdata()
 
-    hash_words = (c_int * 3)(0x01234567, 0x89abcdef, 0xdeadc0de)
-    data.d_align = 4;
-    data.d_off = 0LL ;
-    data.d_buf = hash_words ;
-    data.d_type = ELF_T_WORD ;
+    hash_words = (ctypes.c_uint * 3)(0x01234567, 0x89abcdef, 0xdeadc0de)
+    data.d_align = 4
+    data.d_off = 0
+    data.d_buf = hash_words
+    data.d_type = Elf_Type.ELF_T_WORD
     data.d_size = ctypes.sizeof(hash_words)
-    data.d_type = ELF_T_BYTE ;
-    data.d_version = EV_CURRENT ;
+    data.d_type = Elf_Type.ELF_T_BYTE
+    data.d_version = EV_CURRENT
 
     shdr = scn.elf32_getshdr()
-    shdr.contents.sh_name = 6
-    shdr.contents.sh_type = SHT_STRTAB
-    shdr.contents.sh_flags = SHF_STRINGS | SHF_ALLOC
+    shdr.contents.sh_name = 1
+    shdr.contents.sh_type = SHT_HASH
+    shdr.contents.sh_flags = SHF_ALLOC
     shdr.contents.sh_entsize = 0
+
+    scn2 = melf.elf_newscn()
+    data2 = scn2.elf_newdata()
+
+    string_table = (ctypes.c_char * 16)(b'\0' , b'.' ,b'f' , b'o' , b'o' , b'\0' , b'.' , b's' , b'h' , b's' , b't' , b'r' , b't' , b'a' , b'b' , b'\0')
+    data2.d_align = 1
+    data2.d_buf = string_table
+    data2.d_off = 0
+    data2.d_size = ctypes.sizeof(string_table)
+    data2.d_type = Elf_Type.ELF_T_BYTE ;
+    data2.d_version = EV_CURRENT;
+
+    shdr2 = scn2.elf32_getshdr()
+    shdr2.contents.sh_name = 6
+    shdr2.contents.sh_type = SHT_STRTAB
+    shdr2.contents.sh_flags = SHF_STRINGS | SHF_ALLOC
+    shdr2.contents.sh_entsize = 0
+
+
+    ehdr.contents.e_shstrndx = scn2.elf_ndxscn();
+
     melf.elf_update(Elf_Cmd.ELF_C_NULL)
 
     phdr.contents.p_type = PT_PHDR
