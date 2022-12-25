@@ -16,8 +16,8 @@ Elf64_Word = ctypes.c_uint
 Elf64_Sword = ctypes.c_int
 Elf32_Addr = ctypes.c_uint
 Elf32_Off = ctypes.c_uint
-Elf32_Addr = ctypes.c_ulonglong
-Elf32_Off = ctypes.c_ulonglong
+Elf64_Addr = ctypes.c_ulonglong
+Elf64_Off = ctypes.c_ulonglong
 
 EI_NIDENT  = 16
 
@@ -306,44 +306,102 @@ PF_R		= (1 << 2)
 PF_MASKOS	= 0x0ff00000
 PF_MASKPROC	= 0xf0000000
 
+
+SHT_NULL =   0
+SHT_PROGBITS =   1
+SHT_SYMTAB =   2
+SHT_STRTAB =   3
+SHT_RELA =   4
+SHT_HASH =   5
+SHT_DYNAMIC =   6
+SHT_NOTE =   7
+SHT_NOBITS =   8
+SHT_REL =     9
+SHT_SHLIB =   10
+SHT_DYNSYM =   11
+SHT_INIT_ARRAY =   14
+SHT_FINI_ARRAY =   15
+SHT_PREINIT_ARRAY = 16
+SHT_GROUP =   17
+SHT_SYMTAB_SHNDX  = 18
+SHT_NUM =    19
+SHT_LOOS =   0x60000000
+SHT_GNU_ATTRIBUTES = 0x6ffffff5
+SHT_GNU_HASH =   0x6ffffff6
+SHT_GNU_LIBLIST =   0x6ffffff7
+SHT_CHECKSUM =   0x6ffffff8
+SHT_LOSUNW =   0x6ffffffa
+SHT_SUNW_move =   0x6ffffffa
+SHT_SUNW_COMDAT =   0x6ffffffb
+SHT_SUNW_syminfo = 0x6ffffffc
+SHT_GNU_verdef =   0x6ffffffd
+SHT_GNU_verneed =   0x6ffffffe
+SHT_GNU_versym =   0x6fffffff
+SHT_HISUNW =   0x6fffffff
+SHT_HIOS =   0x6fffffff
+SHT_LOPROC =   0x70000000
+SHT_HIPROC =   0x7fffffff
+SHT_LOUSER =   0x80000000
+SHT_HIUSER =   0x8fffffff
+
+SHF_WRITE =      (1 << 0)
+SHF_ALLOC =      (1 << 1)
+SHF_EXECINSTR =      (1 << 2)
+SHF_MERGE =      (1 << 4)
+SHF_STRINGS =      (1 << 5)
+SHF_INFO_LINK =      (1 << 6)
+SHF_LINK_ORDER =      (1 << 7)
+SHF_OS_NONCONFORMING = (1 << 8)
+
+SHF_GROUP         = (1 << 9)
+SHF_TLS           = (1 << 10)
+SHF_COMPRESSED    = (1 << 11)
+SHF_MASKOS        = 0x0ff00000
+SHF_MASKPROC      = 0xf0000000
+SHF_GNU_RETAIN    = (1 << 21)
+SHF_ORDERED       = (1 << 30)
+
+#SHF_EXCLUDE       = (1U << 31)
+
+
 class Elf32_Ehdr(ctypes.Structure):
     _fields_ = [
-        ("e_ident", ctypes.c_ubyte * EI_NIDENT),
-        ("e_type", Elf32_Half),
-        ("e_machine", Elf32_Half),
-        ("e_version", Elf32_Word),
-        ("e_entry", Elf32_Addr),
-        ("e_phoff", Elf32_Off),
-        ("e_shoff", Elf32_Off),
-        ("e_flags", Elf32_Word),
-        ("e_ehsize", Elf32_Half),
+        ("e_ident",     ctypes.c_ubyte * EI_NIDENT),
+        ("e_type",      Elf32_Half),
+        ("e_machine",   Elf32_Half),
+        ("e_version",   Elf32_Word),
+        ("e_entry",     Elf32_Addr),
+        ("e_phoff",     Elf32_Off),
+        ("e_shoff",     Elf32_Off),
+        ("e_flags",     Elf32_Word),
+        ("e_ehsize",    Elf32_Half),
         ("e_phentsize", Elf32_Half),
-        ("e_phnum", Elf32_Half),
+        ("e_phnum",     Elf32_Half),
         ("e_shentsize", Elf32_Half),
-        ("e_shnum", Elf32_Half),
-        ("e_shstrndx", Elf32_Half) ]
+        ("e_shnum",     Elf32_Half),
+        ("e_shstrndx",  Elf32_Half) ]
 
 class Elf32_Phdr(ctypes.Structure):
     _fields_ = [
-        ("p_type", Elf32_Word),
+        ("p_type",   Elf32_Word),
         ("p_offset", Elf32_Off),
-        ("p_vaddr", Elf32_Addr),
-        ("p_paddr", Elf32_Addr),
+        ("p_vaddr",  Elf32_Addr),
+        ("p_paddr",  Elf32_Addr),
         ("p_filesz", Elf32_Word),
-        ("p_memsz", Elf32_Word),
-        ("p_flags", Elf32_Word),
-        ("p_align", Elf32_Word) ]
+        ("p_memsz",  Elf32_Word),
+        ("p_flags",  Elf32_Word),
+        ("p_align",  Elf32_Word) ]
 
 
 class Elf32_Shdr(ctypes.Structure):
     _fields_ = [
-        ("sh_name", Elf32_Word),
-        ("sh_type", Elf32_Word),
-        ("sh_flags", Elf32_Word),
-        ("sh_addr", Elf32_Addr),
-        ("sh_offset", Elf32_Off),
-        ("sh_size", Elf32_Word),
-        ("sh_link", Elf32_Word),
-        ("sh_info", Elf32_Word),
+        ("sh_name",      Elf32_Word),
+        ("sh_type",      Elf32_Word),
+        ("sh_flags",     Elf32_Word),
+        ("sh_addr",      Elf32_Addr),
+        ("sh_offset",    Elf32_Off),
+        ("sh_size",      Elf32_Word),
+        ("sh_link",      Elf32_Word),
+        ("sh_info",      Elf32_Word),
         ("sh_addralign", Elf32_Word),
-        ("sh_entsize", Elf32_Word) ]
+        ("sh_entsize",   Elf32_Word) ]
