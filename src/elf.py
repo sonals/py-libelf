@@ -2,17 +2,17 @@
  SPDX-License-Identifier: LGPL-2.1-or-later
 
  Copyright (C) 2022 Advanced Micro Devices, Inc.
+ Author(s): Sonal Santan
 
  ctypes based Python binding for elf.h
-
- For definition of the enumeration literals and structures see elf.h
+ Please see elf.h man page for definition of the enumerations and structures
 """
 
 import ctypes
 
 Elf32_Half = ctypes.c_ushort
 Elf64_Half = ctypes.c_ushort
-Elf32_Word = ctypes.c_uint;
+Elf32_Word = ctypes.c_uint
 Elf32_Sword = ctypes.c_int
 Elf64_Word = ctypes.c_uint
 Elf64_Sword = ctypes.c_int
@@ -367,6 +367,7 @@ SHF_ORDERED       = (1 << 30)
 
 
 class Elf32_Ehdr(ctypes.Structure):
+    """ Python binding for ELF struct Elf32_Ehdr """
     _fields_ = [
         ("e_ident",     ctypes.c_ubyte * EI_NIDENT),
         ("e_type",      Elf32_Half),
@@ -384,6 +385,7 @@ class Elf32_Ehdr(ctypes.Structure):
         ("e_shstrndx",  Elf32_Half) ]
 
 class Elf32_Phdr(ctypes.Structure):
+    """ Python binding for ELF struct Elf32_Phdr """
     _fields_ = [
         ("p_type",   Elf32_Word),
         ("p_offset", Elf32_Off),
@@ -396,6 +398,7 @@ class Elf32_Phdr(ctypes.Structure):
 
 
 class Elf32_Shdr(ctypes.Structure):
+    """ Python binding for ELF struct Elf32_Shdr """
     _fields_ = [
         ("sh_name",      Elf32_Word),
         ("sh_type",      Elf32_Word),

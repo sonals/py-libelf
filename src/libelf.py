@@ -2,28 +2,25 @@
  SPDX-License-Identifier: LGPL-3.0-or-later OR GPL-2.0-or-later
 
  Copyright (C) 2022 Advanced Micro Devices, Inc.
+ Author(s): Sonal Santan
 
  ctypes based Python binding for libelf
 """
 
-import os
-import sys
 import errno
 import ctypes
-import warnings
 import enum
 
-from elf import *
+import elf
 
 _libelf = ctypes.CDLL("libelf.so", mode=ctypes.RTLD_GLOBAL)
 
-"""A ctypes-compatible IntEnum superclass."""
 class CtypesEnum(enum.IntEnum):
+    """A ctypes-compatible IntEnum superclass."""
     @classmethod
     def from_param(cls, obj):
         return int(obj)
 
-"""For definition of the enumeration literals see libelf.h."""
 class Elf_Type(CtypesEnum):
     ELF_T_BYTE = 0
     ELF_T_ADDR = 1
@@ -84,6 +81,9 @@ class Elf_Kind(CtypesEnum):
 
 
 class ElfError(Exception):
+    """
+    Convert libelf C-style error codes and error string to exception
+    """
     def __init__(self, *args):
         super().__init__(args)
         self.errno = _libelf.elf_errno()
@@ -96,7 +96,7 @@ def _NotNullOrError(res):
     """
     Validate returned pointer
     """
-    if (res == None):
+    if (res is None):
         raise ElfError()
     return res
 
@@ -107,6 +107,7 @@ def _TrueOrError(res):
     if (res == 0):
         raise ElfError()
     return res
+
 
 class Elf_Data(ctypes.Structure):
     _fields_ = [
@@ -133,14 +134,14 @@ class Elf_ScnDescriptor:
 
 class ElfDescriptor:
     def _cleanup(self):
-        if (self.elf != None):
-            _libelf.elf_end(self.elf)
-        if (self.filehandle != None):
+        if (self.elfnative is not None):
+            _libelf.elf_end(self.elfnative)
+        if (self.filehandle is not None):
             self.filehandle.close()
 
-    def __init__(self, elf, filehandle = None):
+    def __init__(self, elfnative, filehandle = None):
         self.filehandle = filehandle
-        self.elf = elf
+        self.elfnative = elfnative
 
     def __del__(self):
         self._cleanup()
@@ -148,35 +149,37 @@ class ElfDescriptor:
     @classmethod
     def fromfile(cls, filename, cmd):
         filehandle = open(filename, "wb+")
-        elf = _libelf.elf_begin(filehandle.fileno(), cmd, None)
-        return cls(_NotNullOrError(elf), filehandle)
+        elfnative = _libelf.elf_begin(filehandle.fileno(), cmd, None)
+        return cls(_NotNullOrError(elfnative), filehandle)
 
     @classmethod
     def frommemory(cls, image, size):
-        elf = _libelf.elf_memory(image, size)
-        return cls(_NotNullOrError(elf))
+        elfnative = _libelf.elf_memory(image, size)
+        return cls(_NotNullOrError(elfnative))
 
     def elf_kind(self):
-        return _libelf.elf_kind(self.elf);
+        return _libelf.elf_kind(self.elfnative)
 
     def elf32_newehdr(self):
-        return _NotNullOrError(_libelf.elf32_newehdr(self.elf))
+        return _NotNullOrError(_libelf.elf32_newehdr(self.elfnative))
 
     def elf32_newphdr(self, count):
-        return _NotNullOrError(_libelf.elf32_newphdr(self.elf, count))
+        return _NotNullOrError(_libelf.elf32_newphdr(self.elfnative, count))
 
     def elf_flagphdr(self, cmd, flags):
-        return _NotNullOrError(_libelf.elf_flagphdr(self.elf, cmd, flags))
+        return _NotNullOrError(_libelf.elf_flagphdr(self.elfnative, cmd, flags))
 
     def elf_update(self, cmd):
-        return _NotNullOrError(_libelf.elf_update(self.elf, cmd))
+        return _NotNullOrError(_libelf.elf_update(self.elfnative, cmd))
 
     def elf_newscn(self):
-        scn = _libelf.elf_newscn(self.elf)
+        scn = _libelf.elf_newscn(self.elfnative)
         return Elf_ScnDescriptor(_NotNullOrError(scn))
+
 
 def elf32_fsize(typ, count, version):
     return _libelf.elf32_fsize(typ, count, version)
+
 
 def _setup():
     _libelf.elf_begin.restype = ctypes.c_void_p
@@ -191,10 +194,10 @@ def _setup():
     _libelf.elf_kind.restype = ctypes.c_uint
     _libelf.elf_kind.argtypes = [ctypes.c_void_p]
 
-    _libelf.elf32_newehdr.restype = ctypes.POINTER(Elf32_Ehdr)
+    _libelf.elf32_newehdr.restype = ctypes.POINTER(elf.Elf32_Ehdr)
     _libelf.elf32_newehdr.argtypes = [ctypes.c_void_p]
 
-    _libelf.elf32_newphdr.restype = ctypes.POINTER(Elf32_Phdr)
+    _libelf.elf32_newphdr.restype = ctypes.POINTER(elf.Elf32_Phdr)
     _libelf.elf32_newphdr.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
 
     _libelf.elf_flagphdr.restype = ctypes.c_uint
@@ -209,7 +212,7 @@ def _setup():
     _libelf.elf_newscn.restype = ctypes.c_void_p
     _libelf.elf_newscn.argtypes = [ctypes.c_void_p]
 
-    _libelf.elf32_getshdr.restype = ctypes.POINTER(Elf32_Shdr)
+    _libelf.elf32_getshdr.restype = ctypes.POINTER(elf.Elf32_Shdr)
     _libelf.elf32_getshdr.argtypes = [ctypes.c_void_p]
 
     _libelf.elf_newdata.restype = ctypes.POINTER(Elf_Data)
@@ -218,7 +221,7 @@ def _setup():
     _libelf.elf_ndxscn.restype = ctypes.c_size_t
     _libelf.elf_ndxscn.argtypes = [ctypes.c_void_p]
 
-    _TrueOrError(_libelf.elf_version(1) != EV_NONE)
+    _TrueOrError(_libelf.elf_version(1) != elf.EV_NONE)
 
 
 if __name__ == "libelf":

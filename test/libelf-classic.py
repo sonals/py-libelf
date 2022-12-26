@@ -1,8 +1,27 @@
+#!/usr/bin/env python3
+
+"""
+ SPDX-License-Identifier: Apache-2.0
+
+ Copyright (C) 2022 Advanced Micro Devices, Inc.
+
+ ctypes based Python binding for libelf
+"""
+
+import sys
+import argparse
 from elf import *
 from libelf import *
 
-if __name__ == "__main__":
-    melf = ElfDescriptor.fromfile("hello.elf", Elf_Cmd.ELF_C_WRITE)
+def parseCommandLine(args):
+    msg = "Write out a sample ELF file"
+    parser = argparse.ArgumentParser(description = msg, exit_on_error = True)
+    parser.add_argument(dest ='filename', nargs = 1)
+    # strip out the argv[0]
+    return parser.parse_args(args[1:])
+
+def writeELF(filename):
+    melf = ElfDescriptor.fromfile(filename, Elf_Cmd.ELF_C_WRITE)
     ehdr = melf.elf32_newehdr()
 
     ehdr.contents.e_ident[EI_DATA] = ELFDATA2MSB
@@ -33,13 +52,14 @@ if __name__ == "__main__":
     data2 = scn2.elf_newdata()
 
     string_table = (ctypes.c_char * 16)(b'\0' , b'.' ,b'f' , b'o' , b'o' , b'\0' ,
-                                        b'.' , b's' , b'h' , b's' , b't' , b'r' , b't' , b'a' , b'b' , b'\0')
+                                        b'.' , b's' , b'h' , b's' , b't' , b'r' ,
+                                        b't' , b'a' , b'b' , b'\0')
     data2.contents.d_align = 1
     data2.contents.d_buf = ctypes.cast(string_table, ctypes.c_void_p)
     data2.contents.d_off = 0
     data2.contents.d_size = ctypes.sizeof(string_table)
-    data2.contents.d_type = Elf_Type.ELF_T_BYTE ;
-    data2.contents.d_version = EV_CURRENT;
+    data2.contents.d_type = Elf_Type.ELF_T_BYTE
+    data2.contents.d_version = EV_CURRENT
 
     shdr2 = scn2.elf32_getshdr()
     shdr2.contents.sh_name = 6
@@ -48,7 +68,7 @@ if __name__ == "__main__":
     shdr2.contents.sh_entsize = 0
 
 
-    ehdr.contents.e_shstrndx = scn2.elf_ndxscn();
+    ehdr.contents.e_shstrndx = scn2.elf_ndxscn()
 
     melf.elf_update(Elf_Cmd.ELF_C_NULL)
 
@@ -59,3 +79,8 @@ if __name__ == "__main__":
     melf.elf_update(Elf_Cmd.ELF_C_WRITE)
 
     del melf
+
+if __name__ == "__main__":
+    argtab = parseCommandLine(sys.argv)
+    print(f"Writing ELF file {argtab.filename[0]}")
+    writeELF(argtab.filename[0])
