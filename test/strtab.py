@@ -80,7 +80,6 @@ def writeELF(filename):
     data2 = scn2.elf_newdata()
     data2.contents.d_align = 1
     data2.contents.d_off = 0
-    data2.contents.d_size = ctypes.sizeof(string_table)
     data2.contents.d_type = libelf.Elf_Type.ELF_T_BYTE
     data2.contents.d_version = elf.EV_CURRENT
 
@@ -90,7 +89,9 @@ def writeELF(filename):
     shdr2.contents.sh_flags = elf.SHF_STRINGS | elf.SHF_ALLOC
     shdr2.contents.sh_entsize = 0
 
-    data2.contents.d_buf = ctypes.cast(strtab.packsyms(), ctypes.c_void_p)
+    symsdata = strtab.packsyms()
+    data2.contents.d_size = ctypes.sizeof(symsdata)
+    data2.contents.d_buf = ctypes.cast(symsdata, ctypes.c_void_p)
 
     ehdr.contents.e_shstrndx = scn2.elf_ndxscn()
 

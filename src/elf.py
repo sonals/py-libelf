@@ -21,22 +21,22 @@ Elf32_Off = ctypes.c_uint
 Elf64_Addr = ctypes.c_ulonglong
 Elf64_Off = ctypes.c_ulonglong
 
-EI_NIDENT  = 16
+EI_NIDENT = 16
 
-EI_MAG0 = 0
-ELFMAG0 = 0x7F
+EI_MAG0 =   0
+ELFMAG0 =   0x7F
 
-EI_MAG1 = 1
-ELFMAG1 = 0x45
+EI_MAG1 =   1
+ELFMAG1 =   0x45
 
-EI_MAG2 = 2
-ELFMAG2 = 0x4C
+EI_MAG2 =   2
+ELFMAG2 =   0x4C
 
-EI_MAG3 = 3
-ELFMAG3 = 0x46
+EI_MAG3 =   3
+ELFMAG3 =   0x46
 
-ELFMAG	= "\177ELF"
-SELFMAG	= 4
+ELFMAG	=  "\177ELF"
+SELFMAG	=  4
 
 EI_CLASS      = 4
 ELFCLASSNONE  =	0
@@ -83,27 +83,27 @@ ET_LOPROC = 0xFF00
 ET_HIPROC = 0xFFFF
 
 
-EM_NONE =  0
-EM_M32 =  1
-EM_SPARC =  2
-EM_386 =  3
-EM_68K =  4
-EM_88K =  5
-EM_IAMCU =  6
-EM_860 =  7
-EM_MIPS =  8
-EM_S370 =  9
+EM_NONE =        0
+EM_M32 =         1
+EM_SPARC =       2
+EM_386 =         3
+EM_68K =         4
+EM_88K =         5
+EM_IAMCU =       6
+EM_860 =         7
+EM_MIPS =        8
+EM_S370 =        9
 EM_MIPS_RS3_LE = 10
 
-EM_PARISC = 15
+EM_PARISC =      15
 
-EM_VPP500 = 17
+EM_VPP500 =      17
 EM_SPARC32PLUS = 18
-EM_960 = 19
-EM_PPC = 20
-EM_PPC64 = 21
-EM_S390 = 22
-EM_SPU = 23
+EM_960 =         19
+EM_PPC =         20
+EM_PPC64 =       21
+EM_S390 =        22
+EM_SPU =         23
 
 EM_V800 = 36
 EM_FR20 = 37
@@ -346,13 +346,13 @@ SHT_HIPROC =   0x7fffffff
 SHT_LOUSER =   0x80000000
 SHT_HIUSER =   0x8fffffff
 
-SHF_WRITE =      (1 << 0)
-SHF_ALLOC =      (1 << 1)
-SHF_EXECINSTR =      (1 << 2)
-SHF_MERGE =      (1 << 4)
-SHF_STRINGS =      (1 << 5)
-SHF_INFO_LINK =      (1 << 6)
-SHF_LINK_ORDER =      (1 << 7)
+SHF_WRITE =            (1 << 0)
+SHF_ALLOC =            (1 << 1)
+SHF_EXECINSTR =        (1 << 2)
+SHF_MERGE =            (1 << 4)
+SHF_STRINGS =          (1 << 5)
+SHF_INFO_LINK =        (1 << 6)
+SHF_LINK_ORDER =       (1 << 7)
 SHF_OS_NONCONFORMING = (1 << 8)
 
 SHF_GROUP         = (1 << 9)
