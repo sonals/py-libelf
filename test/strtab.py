@@ -15,6 +15,29 @@ import ctypes
 import elf
 import libelf
 
+
+class ElfStringTable:
+    def __init__(self):
+        self.size = 0
+        self.syms = []
+    def add(self, item):
+        pos = self.size
+        self.syms.append(item)
+        self.size += (len(item) + 1)
+        return pos
+
+    def packsyms(self):
+        data = ctypes.create_string_buffer(self.size)
+        index = 0
+        for item in self.syms:
+            arr = bytes(item, "utf-8")
+            for element in arr:
+                data[index] = element
+                index += 1
+            data[index] = b'\0'
+            index += 1
+        return data
+
 def parseCommandLine(args):
     msg = "Write out a sample ELF file"
     parser = argparse.ArgumentParser(description = msg, exit_on_error = True)
@@ -23,12 +46,15 @@ def parseCommandLine(args):
     return parser.parse_args(args[1:])
 
 def writeELF(filename):
+    strtab = ElfStringTable()
     melf = libelf.ElfDescriptor.fromfile(filename, libelf.Elf_Cmd.ELF_C_WRITE)
     ehdr = melf.elf32_newehdr()
 
     ehdr.contents.e_ident[elf.EI_DATA] = elf.ELFDATA2MSB
     ehdr.contents.e_machine = elf.EM_PPC
     ehdr.contents.e_type = elf.ET_EXEC
+
+    strtab.add("")
 
     phdr = melf.elf32_newphdr(1)
 
@@ -45,30 +71,26 @@ def writeELF(filename):
     data.contents.d_version = elf.EV_CURRENT
 
     shdr = scn.elf32_getshdr()
-    shdr.contents.sh_name = 1
+    shdr.contents.sh_name = strtab.add(".foo")
     shdr.contents.sh_type = elf.SHT_HASH
     shdr.contents.sh_flags = elf.SHF_ALLOC
     shdr.contents.sh_entsize = 0
 
     scn2 = melf.elf_newscn()
     data2 = scn2.elf_newdata()
-
-    string_table = (ctypes.c_char * 16)(b'\0' , b'.' ,b'f' , b'o' , b'o' , b'\0' ,
-                                        b'.' , b's' , b'h' , b's' , b't' , b'r' ,
-                                        b't' , b'a' , b'b' , b'\0')
     data2.contents.d_align = 1
-    data2.contents.d_buf = ctypes.cast(string_table, ctypes.c_void_p)
     data2.contents.d_off = 0
     data2.contents.d_size = ctypes.sizeof(string_table)
     data2.contents.d_type = libelf.Elf_Type.ELF_T_BYTE
     data2.contents.d_version = elf.EV_CURRENT
 
     shdr2 = scn2.elf32_getshdr()
-    shdr2.contents.sh_name = 6
+    shdr2.contents.sh_name = strtab.add(".shstrtab")
     shdr2.contents.sh_type = elf.SHT_STRTAB
     shdr2.contents.sh_flags = elf.SHF_STRINGS | elf.SHF_ALLOC
     shdr2.contents.sh_entsize = 0
 
+    data2.contents.d_buf = ctypes.cast(strtab.packsyms(), ctypes.c_void_p)
 
     ehdr.contents.e_shstrndx = scn2.elf_ndxscn()
 
