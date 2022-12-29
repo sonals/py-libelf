@@ -5,7 +5,7 @@
 
  Copyright (C) 2022 Advanced Micro Devices, Inc.
 
- ctypes based Python binding for libelf
+ Port of classic "Creating new ELF objects" from "libelf by Example"
 """
 
 import sys
@@ -41,7 +41,6 @@ def writeELF(filename):
     data.contents.d_buf = ctypes.cast(hash_words, ctypes.c_void_p)
     data.contents.d_type = libelf.Elf_Type.ELF_T_WORD
     data.contents.d_size = ctypes.sizeof(hash_words)
-    data.contents.d_type = libelf.Elf_Type.ELF_T_BYTE
     data.contents.d_version = elf.EV_CURRENT
 
     shdr = scn.elf32_getshdr()
