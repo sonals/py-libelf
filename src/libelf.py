@@ -5,6 +5,7 @@
  Author(s): Sonal Santan
 
  ctypes based Python binding for libelf
+ Enumerations and classes
 """
 
 import errno
@@ -16,63 +17,69 @@ import elf
 _libelf = ctypes.CDLL("libelf.so", mode=ctypes.RTLD_GLOBAL)
 
 class CtypesEnum(enum.IntEnum):
-    """A ctypes-compatible IntEnum superclass."""
+    """
+    A ctypes-compatible IntEnum superclass.
+    https://stackoverflow.com/questions/38356698/how-to-pass-enum-as-argument-in-ctypes-python
+    """
     @classmethod
     def from_param(cls, obj):
         return int(obj)
 
 class Elf_Type(CtypesEnum):
-    ELF_T_BYTE = 0
-    ELF_T_ADDR = 1
-    ELF_T_DYN =  2
-    ELF_T_EHDR = 3
-    ELF_T_HALF = 4
-    ELF_T_OFF =  5
-    ELF_T_PHDR = 6
-    ELF_T_RELA = 7
-    ELF_T_REL =  8
-    ELF_T_SHDR = 9
-    ELF_T_SWORD = 10
-    ELF_T_SYM =   11
-    ELF_T_WORD =  12
-    ELF_T_XWORD = 13
-    ELF_T_SXWORD = 14
-    ELF_T_VDEF = 15
-    ELF_T_VDAUX = 16
-    ELF_T_VNEED = 17
-    ELF_T_VNAUX = 18
-    ELF_T_NHDR = 19
+    """ Binding for Elf_Type enumeration in libelf library """
+    ELF_T_BYTE =     0
+    ELF_T_ADDR =     1
+    ELF_T_DYN =      2
+    ELF_T_EHDR =     3
+    ELF_T_HALF =     4
+    ELF_T_OFF =      5
+    ELF_T_PHDR =     6
+    ELF_T_RELA =     7
+    ELF_T_REL =      8
+    ELF_T_SHDR =     9
+    ELF_T_SWORD =   10
+    ELF_T_SYM =     11
+    ELF_T_WORD =    12
+    ELF_T_XWORD =   13
+    ELF_T_SXWORD =  14
+    ELF_T_VDEF =    15
+    ELF_T_VDAUX =   16
+    ELF_T_VNEED =   17
+    ELF_T_VNAUX =   18
+    ELF_T_NHDR =    19
     ELF_T_SYMINFO = 20
-    ELF_T_MOVE = 21
-    ELF_T_LIB = 22
+    ELF_T_MOVE =    21
+    ELF_T_LIB =     22
     ELF_T_GNUHASH = 23
-    ELF_T_AUXV = 24
-    ELF_T_CHDR = 25
-    ELF_T_NHDR8 = 26
-    ELF_T_NUM = 27
+    ELF_T_AUXV =    24
+    ELF_T_CHDR =    25
+    ELF_T_NHDR8 =   26
+    ELF_T_NUM =     27
 
 class Elf_Cmd(CtypesEnum):
-    ELF_C_NULL = 0
-    ELF_C_READ = 1
-    ELF_C_RDWR = 2
-    ELF_C_WRITE = 3
-    ELF_C_CLR = 4
-    ELF_C_SET = 5
-    ELF_C_FDDONE = 6
-    ELF_C_FDREAD = 7
-    ELF_C_READ_MMAP = 8
-    ELF_C_RDWR_MMAP = 9
-    ELF_C_WRITE_MMAP = 10
+    """ Binding for Elf_Cmd enumeration in libelf library """
+    ELF_C_NULL =               0
+    ELF_C_READ =               1
+    ELF_C_RDWR =               2
+    ELF_C_WRITE =              3
+    ELF_C_CLR =                4
+    ELF_C_SET =                5
+    ELF_C_FDDONE =             6
+    ELF_C_FDREAD =             7
+    ELF_C_READ_MMAP =          8
+    ELF_C_RDWR_MMAP =          9
+    ELF_C_WRITE_MMAP =        10
     ELF_C_READ_MMAP_PRIVATE = 11
-    ELF_C_EMPTY = 12
-    ELF_C_NUM = 13
+    ELF_C_EMPTY =             12
+    ELF_C_NUM =               13
 
 
-ELF_F_DIRTY = 0x1
-ELF_F_LAYOUT = 0x4
+ELF_F_DIRTY =      0x1
+ELF_F_LAYOUT =     0x4
 ELF_F_PERMISSIVE = 0x8
 
 class Elf_Kind(CtypesEnum):
+    """ Binding for Elf_Kind enumeration in libelf library """
     ELF_K_NONE = 0
     ELF_K_AR   = 1
     ELF_K_COFF = 2
@@ -81,9 +88,7 @@ class Elf_Kind(CtypesEnum):
 
 
 class ElfError(Exception):
-    """
-    Convert libelf C-style error codes and error string to exception
-    """
+    """ Convert libelf C-style error code and error string to Python exception """
     def __init__(self, *args):
         super().__init__(args)
         self.errno = _libelf.elf_errno()
@@ -92,47 +97,46 @@ class ElfError(Exception):
     def __str__(self):
         return self.errmsg
 
-def _NotNullOrError(res):
-    """
-    Validate returned pointer
-    """
+def _not_null_or_error(res):
+    """ Validate returned pointer from libelf library """
     if (res is None):
         raise ElfError()
     return res
 
-def _TrueOrError(res):
-    """
-    Validate return status
-    """
+def _true_or_error(res):
+    """ Validate return status from libelf library """
     if (res == 0):
         raise ElfError()
     return res
 
 
 class Elf_Data(ctypes.Structure):
+    """ Binding for Elf_Data structure in libelf """
     _fields_ = [
-        ("d_buf", ctypes.c_void_p),
-        ("d_type", ctypes.c_int),
+        ("d_buf",     ctypes.c_void_p),
+        ("d_type",    ctypes.c_int),
         ("d_version", ctypes.c_uint),
-        ("d_size", ctypes.c_size_t),
-        ("d_off", ctypes.c_longlong),
-        ("d_align", ctypes.c_size_t) ]
+        ("d_size",    ctypes.c_size_t),
+        ("d_off",     ctypes.c_longlong),
+        ("d_align",   ctypes.c_size_t) ]
 
 
 class Elf_ScnDescriptor:
+    """ Binding for Elf_Scn descriptor in libelf """
     def __init__(self, scn):
         self.scn = scn
 
     def elf32_getshdr(self):
-        return _NotNullOrError(_libelf.elf32_getshdr(self.scn))
+        return _not_null_or_error(_libelf.elf32_getshdr(self.scn))
 
     def elf_newdata(self):
-        return _NotNullOrError(_libelf.elf_newdata(self.scn))
+        return _not_null_or_error(_libelf.elf_newdata(self.scn))
 
     def elf_ndxscn(self):
         return _libelf.elf_ndxscn(self.scn)
 
 class ElfDescriptor:
+    """ Binding for Elf descriptor in libelf """
     def _cleanup(self):
         if (self.elfnative is not None):
             _libelf.elf_end(self.elfnative)
@@ -150,31 +154,31 @@ class ElfDescriptor:
     def fromfile(cls, filename, cmd):
         filehandle = open(filename, "wb+")
         elfnative = _libelf.elf_begin(filehandle.fileno(), cmd, None)
-        return cls(_NotNullOrError(elfnative), filehandle)
+        return cls(_not_null_or_error(elfnative), filehandle)
 
     @classmethod
     def frommemory(cls, image, size):
         elfnative = _libelf.elf_memory(image, size)
-        return cls(_NotNullOrError(elfnative))
+        return cls(_not_null_or_error(elfnative))
 
     def elf_kind(self):
         return _libelf.elf_kind(self.elfnative)
 
     def elf32_newehdr(self):
-        return _NotNullOrError(_libelf.elf32_newehdr(self.elfnative))
+        return _not_null_or_error(_libelf.elf32_newehdr(self.elfnative))
 
     def elf32_newphdr(self, count):
-        return _NotNullOrError(_libelf.elf32_newphdr(self.elfnative, count))
+        return _not_null_or_error(_libelf.elf32_newphdr(self.elfnative, count))
 
     def elf_flagphdr(self, cmd, flags):
-        return _NotNullOrError(_libelf.elf_flagphdr(self.elfnative, cmd, flags))
+        return _not_null_or_error(_libelf.elf_flagphdr(self.elfnative, cmd, flags))
 
     def elf_update(self, cmd):
-        return _NotNullOrError(_libelf.elf_update(self.elfnative, cmd))
+        return _not_null_or_error(_libelf.elf_update(self.elfnative, cmd))
 
     def elf_newscn(self):
         scn = _libelf.elf_newscn(self.elfnative)
-        return Elf_ScnDescriptor(_NotNullOrError(scn))
+        return Elf_ScnDescriptor(_not_null_or_error(scn))
 
 
 def elf32_fsize(typ, count, version):
@@ -221,7 +225,7 @@ def _setup():
     _libelf.elf_ndxscn.restype = ctypes.c_size_t
     _libelf.elf_ndxscn.argtypes = [ctypes.c_void_p]
 
-    _TrueOrError(_libelf.elf_version(1) != elf.EV_NONE)
+    _true_or_error(_libelf.elf_version(1) != elf.EV_NONE)
 
 
 if __name__ == "libelf":

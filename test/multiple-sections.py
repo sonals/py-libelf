@@ -39,26 +39,26 @@ class ElfStringTable:
             index += 1
         return data
 
-def parseCommandLine(args):
+def parse_command_line(args):
     msg = "Write out a sample ELF file"
     parser = argparse.ArgumentParser(description = msg, exit_on_error = True)
     parser.add_argument(dest ='filename', nargs = 1)
     # strip out the argv[0]
     return parser.parse_args(args[1:])
 
-def populateRandomNumbers(size):
+def populate_random_numbers(size):
     words = (ctypes.c_uint * size)()
     for index in range(size):
-        words[index] = index
-#        words[index] = int(random.random() * 0xffffffff)
+#        words[index] = index
+        words[index] = int(random.random() * 0xffffffff)
     return words
 
-def populateTextNDataSections(strtab, melf):
+def populate_text_and_data_sections(strtab, melf):
     # Populate text segment
     scn = melf.elf_newscn()
     scn_data = scn.elf_newdata()
 
-    words = populateRandomNumbers(64)
+    words = populate_random_numbers(64)
     scn_data.contents.d_align = 4
     scn_data.contents.d_off = 0
     scn_data.contents.d_buf = ctypes.cast(words, ctypes.c_void_p)
@@ -76,7 +76,7 @@ def populateTextNDataSections(strtab, melf):
     scn = melf.elf_newscn()
     scn_data = scn.elf_newdata()
 
-    words = populateRandomNumbers(32)
+    words = populate_random_numbers(32)
     scn_data.contents.d_align = 4
     scn_data.contents.d_off = 0
     scn_data.contents.d_buf = ctypes.cast(words, ctypes.c_void_p)
@@ -91,7 +91,7 @@ def populateTextNDataSections(strtab, melf):
     shdr.contents.sh_entsize = 0
 
 
-def writeELF(filename):
+def write_ELF(filename):
     strtab = ElfStringTable()
     melf = libelf.ElfDescriptor.fromfile(filename, libelf.Elf_Cmd.ELF_C_WRITE)
     ehdr = melf.elf32_newehdr()
@@ -104,9 +104,9 @@ def writeELF(filename):
 
     phdr = melf.elf32_newphdr(1)
 
-    populateTextNDataSections(strtab, melf)
+    populate_text_and_data_sections(strtab, melf)
 
-    populateTextNDataSections(strtab, melf)
+    populate_text_and_data_sections(strtab, melf)
 
     scn = melf.elf_newscn()
     data = scn.elf_newdata()
@@ -136,6 +136,6 @@ def writeELF(filename):
     melf.elf_update(libelf.Elf_Cmd.ELF_C_WRITE)
 
 if __name__ == "__main__":
-    argtab = parseCommandLine(sys.argv)
+    argtab = parse_command_line(sys.argv)
     print(f"Writing ELF file {argtab.filename[0]}")
-    writeELF(argtab.filename[0])
+    write_ELF(argtab.filename[0])
