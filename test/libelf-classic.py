@@ -11,9 +11,20 @@
 import sys
 import argparse
 import ctypes
+import subprocess
+import hashlib
 
 import elf
 import libelf
+
+def validateELF(filename):
+    result = subprocess.run(["readelf", "-a", filename], capture_output = True)
+    sig = hashlib.md5(result.stdout).hexdigest()
+    siggold = None
+    with open(filename + ".out", "rb") as goldhandle:
+        gold = goldhandle.read()
+        siggold = hashlib.md5(gold).hexdigest()
+    assert(sig == siggold), "ELF headers do not match with that of golden for " + filename
 
 def parseCommandLine(args):
     msg = "Write out a sample ELF file"
@@ -83,3 +94,5 @@ if __name__ == "__main__":
     argtab = parseCommandLine(sys.argv)
     print(f"Writing ELF file {argtab.filename[0]}")
     writeELF(argtab.filename[0])
+
+    validateELF(argtab.filename[0])

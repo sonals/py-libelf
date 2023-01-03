@@ -11,16 +11,16 @@ else()
   message(FATAL_ERROR "Unsupported platform")
 endif()
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(LIBELF REQUIRED libelf)
-find_package(Python3 COMPONENTS Interpreter REQUIRED)
-
-if (Python3_FOUND)
-  message("-- Python version: ${Python3_VERSION}")
-  set(PYTHONLIBS_VERSION_MAJOR ${Python3_VERSION_MAJOR})
-  set(PYTHONLIBS_VERSION_MINOR ${Python3_VERSION_MINOR})
-endif(Python3_FOUND)
+message("-- CMAKE_SYSTEM=${CMAKE_SYSTEM}")
 message("-- CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}")
+
+find_package(PkgConfig REQUIRED)
+
+pkg_check_modules(LIBELF REQUIRED libelf)
+message("-- Libelf version: ${LIBELF_VERSION}")
+
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+message("-- Python version: ${Python3_VERSION}")
 
 find_program (PYLINT pylint REQUIRED)
 

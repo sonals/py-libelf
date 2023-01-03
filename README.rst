@@ -27,4 +27,5 @@ Test
 
         cd build
         cmake ../
+        make install
         make test
