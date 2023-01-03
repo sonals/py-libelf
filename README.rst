@@ -8,7 +8,7 @@
 PY-LIBELF
 =========
 
-Python bindings for libelf which is part of https://sourceware.org/elfutils/
+Python bindings for ``libelf`` which is part of elfutils, https://sourceware.org/elfutils/
 
 Install
 *******

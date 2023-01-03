@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2023 Advanced Micro Devices, Inc.
 
-set(ELF_CORE_FILES
-  elf.py
-  libelf.py)
+message("-- CMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}")
 
-install (FILES ${ELF_CORE_FILES} DESTINATION ${PY_ELFLIB_BUILD_INSTALL_DIR})
+install (FILES elf.py DESTINATION ${PY_ELFLIB_BUILD_INSTALL_DIR})
+install (FILES libelf.py DESTINATION ${PY_ELFLIB_BUILD_INSTALL_DIR})
+
+file(COPY "${PROJECT_SOURCE_DIR}/.pylintrc" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 add_test(NAME elf
   COMMAND ${PYLINT} -E "${PROJECT_SOURCE_DIR}/src/elf.py"
