@@ -17,19 +17,24 @@ import hashlib
 import elf
 import libelf
 
-def validateELF(filename):
-    result = subprocess.run(["readelf", "-a", filename], capture_output = True)
+def validateELF(elfname, goldname):
+    result = subprocess.run(["readelf", "-a", elfname], capture_output = True)
     sig = hashlib.md5(result.stdout).hexdigest()
-    siggold = None
-    with open(filename + ".out", "rb") as goldhandle:
+    goldsig = None
+
+    if (goldname is None):
+        return
+
+    with open(goldname, "rb") as goldhandle:
         gold = goldhandle.read()
-        siggold = hashlib.md5(gold).hexdigest()
-    assert(sig == siggold), "ELF headers do not match with that of golden for " + filename
+        goldsig = hashlib.md5(gold).hexdigest()
+    assert(sig == goldsig), "ELF headers mismatch for " + elfname
 
 def parseCommandLine(args):
     msg = "Write out a sample ELF file"
     parser = argparse.ArgumentParser(description = msg, exit_on_error = True)
-    parser.add_argument(dest ='filename', nargs = 1)
+    parser.add_argument("-o", "--output", dest ='filename', nargs = 1)
+    parser.add_argument("-r", "--reference", dest ='reference', nargs = '?')
     # strip out the argv[0]
     return parser.parse_args(args[1:])
 
@@ -95,4 +100,4 @@ if __name__ == "__main__":
     print(f"Writing ELF file {argtab.filename[0]}")
     writeELF(argtab.filename[0])
 
-    validateELF(argtab.filename[0])
+    validateELF(argtab.filename[0], argtab.reference)

@@ -12,6 +12,8 @@ import sys
 import argparse
 import ctypes
 import random
+import subprocess
+import hashlib
 
 import elf
 import libelf
@@ -39,10 +41,24 @@ class ElfStringTable:
             index += 1
         return data
 
+def validateELF(elfname, goldname):
+    result = subprocess.run(["readelf", "-a", elfname], capture_output = True)
+    sig = hashlib.md5(result.stdout).hexdigest()
+    goldsig = None
+
+    if (goldname is None):
+        return
+
+    with open(goldname, "rb") as goldhandle:
+        gold = goldhandle.read()
+        goldsig = hashlib.md5(gold).hexdigest()
+    assert(sig == goldsig), "ELF headers mismatch for " + elfname
+
 def parse_command_line(args):
     msg = "Write out a sample ELF file"
     parser = argparse.ArgumentParser(description = msg, exit_on_error = True)
-    parser.add_argument(dest ='filename', nargs = 1)
+    parser.add_argument("-o", "--output", dest ='filename', nargs = 1)
+    parser.add_argument("-r", "--reference", dest ='reference', nargs = '?')
     # strip out the argv[0]
     return parser.parse_args(args[1:])
 
@@ -139,3 +155,5 @@ if __name__ == "__main__":
     argtab = parse_command_line(sys.argv)
     print(f"Writing ELF file {argtab.filename[0]}")
     write_ELF(argtab.filename[0])
+
+    validateELF(argtab.filename[0], argtab.reference)
