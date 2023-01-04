@@ -18,4 +18,4 @@ add_test(NAME strtab
   "${PROJECT_SOURCE_DIR}/test/strtab.gold" WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 set_tests_properties(libelf-classic multiple-sections strtab PROPERTIES ENVIRONMENT
-  "PYTHONPATH=${PY_ELFLIB_BUILD_INSTALL_DIR}")
+  "PYTHONPATH=${PY_ELFLIB_BUILD_INSTALL_DIR};${PROJECT_SOURCE_DIR}/test")
