@@ -16,30 +16,8 @@ import libelf
 
 import testhelper
 
-class ElfStringTable:
-    def __init__(self):
-        self.size = 0
-        self.syms = []
-    def add(self, item):
-        pos = self.size
-        self.syms.append(item)
-        self.size += (len(item) + 1)
-        return pos
-
-    def packsyms(self):
-        data = ctypes.create_string_buffer(self.size)
-        index = 0
-        for item in self.syms:
-            arr = bytes(item, "utf-8")
-            for element in arr:
-                data[index] = element
-                index += 1
-            data[index] = b'\0'
-            index += 1
-        return data
-
 def write_ELF(filename):
-    strtab = ElfStringTable()
+    strtab = testhelper.ElfStringTable()
     melf = libelf.ElfDescriptor.fromfile(filename, libelf.Elf_Cmd.ELF_C_WRITE)
     ehdr = melf.elf32_newehdr()
 
