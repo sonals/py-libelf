@@ -67,9 +67,16 @@ def write_ELF(filename):
     melf = libelf.ElfDescriptor.fromfile(filename, libelf.Elf_Cmd.ELF_C_WRITE)
     ehdr = melf.elf32_newehdr()
 
-    ehdr.contents.e_ident[elf.EI_DATA] = elf.ELFDATA2MSB
-    ehdr.contents.e_machine = elf.EM_AVR32
+    ehdr.contents.e_ident[elf.EI_DATA] = elf.ELFDATA2LSB
+    ehdr.contents.e_ident[elf.EI_VERSION] = elf.EV_CURRENT
+    # Our own ABI version
+    ehdr.contents.e_ident[elf.EI_OSABI] = 0x40
+    ehdr.contents.e_ident[elf.EI_ABIVERSION] = 0x1
+    # Repurpose obsolete EM_M32 for our machine type
+    ehdr.contents.e_machine = elf.EM_M32
     ehdr.contents.e_type = elf.ET_EXEC
+    ehdr.contents.e_flags = 0x0;
+
 
     strtab.add("")
 

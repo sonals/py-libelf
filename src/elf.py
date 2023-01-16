@@ -50,7 +50,7 @@ ELFDATA2LSB   =	1
 ELFDATA2MSB   =	2
 ELFDATANUM    =	3
 
-EI_VERSION = 6
+EI_VERSION    = 6
 
 EI_OSABI             =  7
 
@@ -70,6 +70,10 @@ ELFOSABI_OPENBSD     =	12
 ELFOSABI_ARM_AEABI   =	64
 ELFOSABI_ARM	     =	97
 ELFOSABI_STANDALONE  =	255
+
+EI_ABIVERSION        =  8
+
+EI_PAD               =  9
 
 ET_NONE   = 0
 ET_REL    = 1
