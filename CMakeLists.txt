@@ -3,10 +3,10 @@
 
 cmake_minimum_required(VERSION 3.18.0)
 
-project(py-elflib)
+project(PYLIBELF HOMEPAGE_URL https://github.com/sonals/py-libelf)
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-  set(CMAKE_INSTALL_PREFIX "/opt/xilinx/py-libelf")
+  set(CMAKE_INSTALL_PREFIX "/opt/xilinx/python3")
 else()
   message(FATAL_ERROR "Unsupported platform")
 endif()

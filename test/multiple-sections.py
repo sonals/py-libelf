@@ -43,7 +43,7 @@ def populate_text_and_data_sections(strtab, melf):
     shdr.contents.sh_flags = elf.SHF_ALLOC
     shdr.contents.sh_entsize = 0
 
-    # Populate text segment
+    # Populate data segment
     scn = melf.elf_newscn()
     scn_data = scn.elf_newdata()
 
