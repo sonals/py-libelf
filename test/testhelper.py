@@ -46,6 +46,8 @@ class ElfStringTable:
     def __init__(self):
         self.size = 0
         self.syms = []
+        self.data = None
+
     def add(self, item):
         pos = self.size
         self.syms.append(item)
@@ -53,13 +55,17 @@ class ElfStringTable:
         return pos
 
     def packsyms(self):
-        data = ctypes.create_string_buffer(self.size)
+        self.data = ctypes.create_string_buffer(self.size)
         index = 0
         for item in self.syms:
             arr = bytes(item, "utf-8")
             for element in arr:
-                data[index] = element
+                self.data[index] = element
                 index += 1
-            data[index] = b'\0'
+            self.data[index] = b'\0'
             index += 1
-        return data
+        return self.data
+
+    def get(self, pos):
+        item = ctypes.string_at(self.data[pos:])
+        return item.decode("utf-8")

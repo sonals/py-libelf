@@ -176,6 +176,12 @@ class ElfDescriptor:
     def elf_update(self, cmd):
         return _not_null_or_error(_libelf.elf_update(self.elfnative, cmd))
 
+    def elf_nextscn(self, scn):
+        if (scn is not None):
+            scn = scn.scn
+        nscn = _libelf.elf_nextscn(self.elfnative, scn)
+        return Elf_ScnDescriptor(nscn) if nscn is not None else nscn
+
     def elf_newscn(self):
         scn = _libelf.elf_newscn(self.elfnative)
         return Elf_ScnDescriptor(_not_null_or_error(scn))
@@ -212,6 +218,9 @@ def _setup():
 
     _libelf.elf32_fsize.restype = ctypes.c_size_t
     _libelf.elf32_fsize.argtypes = [ctypes.c_int, ctypes.c_size_t, ctypes.c_uint]
+
+    _libelf.elf_nextscn.restype = ctypes.c_void_p
+    _libelf.elf_nextscn.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
 
     _libelf.elf_newscn.restype = ctypes.c_void_p
     _libelf.elf_newscn.argtypes = [ctypes.c_void_p]

@@ -30,7 +30,7 @@ def populate_text_and_data_sections(strtab, melf):
     scn_data = scn.elf_newdata()
 
     words = populate_random_numbers(64)
-    scn_data.contents.d_align = 4
+    scn_data.contents.d_align = 8
     scn_data.contents.d_off = 0
     scn_data.contents.d_buf = ctypes.cast(words, ctypes.c_void_p)
     scn_data.contents.d_type = libelf.Elf_Type.ELF_T_WORD
@@ -48,7 +48,7 @@ def populate_text_and_data_sections(strtab, melf):
     scn_data = scn.elf_newdata()
 
     words = populate_random_numbers(32)
-    scn_data.contents.d_align = 4
+    scn_data.contents.d_align = 16
     scn_data.contents.d_off = 0
     scn_data.contents.d_buf = ctypes.cast(words, ctypes.c_void_p)
     scn_data.contents.d_type = libelf.Elf_Type.ELF_T_WORD
@@ -77,10 +77,9 @@ def write_ELF(filename):
     ehdr.contents.e_type = elf.ET_EXEC
     ehdr.contents.e_flags = 0x0;
 
-
     strtab.add("")
 
-    phdr = melf.elf32_newphdr(1)
+    phdr = melf.elf32_newphdr(2)
 
     populate_text_and_data_sections(strtab, melf)
 
@@ -107,10 +106,36 @@ def write_ELF(filename):
 
     melf.elf_update(libelf.Elf_Cmd.ELF_C_NULL)
 
-    phdr.contents.p_type = elf.PT_PHDR
-    phdr.contents.p_offset = ehdr.contents.e_phoff
-    phdr.contents.p_filesz = libelf.elf32_fsize(libelf.Elf_Type.ELF_T_PHDR, 1, elf.EV_CURRENT)
+    phdr[0].p_type = elf.PT_PHDR
+    phdr[0].p_offset = ehdr.contents.e_phoff
+    phdr[0].p_vaddr = ehdr.contents.e_phoff
+    phdr[0].p_paddr = ehdr.contents.e_phoff
+    phdr[0].p_filesz = libelf.elf32_fsize(libelf.Elf_Type.ELF_T_PHDR, 1, elf.EV_CURRENT)
+    phdr[0].p_memsz = libelf.elf32_fsize(libelf.Elf_Type.ELF_T_PHDR, 1, elf.EV_CURRENT)
+    phdr[0].p_flags = elf.PF_R
+    phdr[0].p_align = 0x8
+
+    phdr[1].p_type = elf.PT_LOAD
+    phdr[1].p_offset = 0
+    phdr[1].p_vaddr = 0
+    phdr[1].p_paddr = 0
+    # Everything before section headers is normally application code, hence load them
+    phdr[1].p_filesz = ehdr.contents.e_shoff
+    phdr[1].p_memsz = ehdr.contents.e_shoff
+    phdr[1].p_flags = elf.PF_R | elf.PF_X
+    phdr[1].p_align = 0x10
+
     melf.elf_flagphdr(libelf.Elf_Cmd.ELF_C_SET , libelf.ELF_F_DIRTY)
+
+    curr = melf.elf_nextscn(None)
+    while (curr is not None) :
+        curr_shdr = curr.elf32_getshdr()
+        name = curr_shdr.contents.sh_name
+        print(strtab.get(name))
+        offset = curr_shdr.contents.sh_offset
+        size = curr_shdr.contents.sh_size
+        curr = melf.elf_nextscn(curr)
+
     melf.elf_update(libelf.Elf_Cmd.ELF_C_WRITE)
 
 if __name__ == "__main__":
