@@ -33,7 +33,7 @@ def write_ELF(filename):
 
     strtab.add("")
 
-    phdr = melf.elf32_newphdr(1)
+    phdr = melf.elf32_newphdr(2)
 
     scn = melf.elf_newscn()
     data = scn.elf_newdata()
@@ -50,6 +50,7 @@ def write_ELF(filename):
     shdr.contents.sh_name = strtab.add(".foo")
     shdr.contents.sh_type = elf.SHT_HASH
     shdr.contents.sh_flags = elf.SHF_ALLOC
+    shdr.contents.sh_link = 2
     shdr.contents.sh_entsize = 0
 
     scn2 = melf.elf_newscn()
@@ -73,9 +74,25 @@ def write_ELF(filename):
 
     melf.elf_update(libelf.Elf_Cmd.ELF_C_NULL)
 
-    phdr.contents.p_type = elf.PT_PHDR
-    phdr.contents.p_offset = ehdr.contents.e_phoff
-    phdr.contents.p_filesz = libelf.elf32_fsize(libelf.Elf_Type.ELF_T_PHDR, 1, elf.EV_CURRENT)
+    phdr[0].p_type = elf.PT_PHDR
+    phdr[0].p_offset = ehdr.contents.e_phoff
+    phdr[0].p_vaddr = ehdr.contents.e_phoff
+    phdr[0].p_paddr = ehdr.contents.e_phoff
+    phdr[0].p_filesz = libelf.elf32_fsize(libelf.Elf_Type.ELF_T_PHDR, 1, elf.EV_CURRENT)
+    phdr[0].p_memsz = libelf.elf32_fsize(libelf.Elf_Type.ELF_T_PHDR, 1, elf.EV_CURRENT)
+    phdr[0].p_flags = elf.PF_R
+    phdr[0].p_align = 0x8
+
+    phdr[1].p_type = elf.PT_LOAD
+    phdr[1].p_offset = 0
+    phdr[1].p_vaddr = 0
+    phdr[1].p_paddr = 0
+    # Everything before section headers is normally application code, hence load them
+    phdr[1].p_filesz = ehdr.contents.e_shoff
+    phdr[1].p_memsz = ehdr.contents.e_shoff
+    phdr[1].p_flags = elf.PF_R | elf.PF_X
+    phdr[1].p_align = 0x10
+
     melf.elf_flagphdr(libelf.Elf_Cmd.ELF_C_SET , libelf.ELF_F_DIRTY)
     melf.elf_update(libelf.Elf_Cmd.ELF_C_WRITE)
 

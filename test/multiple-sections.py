@@ -131,9 +131,9 @@ def write_ELF(filename):
     while (curr is not None) :
         curr_shdr = curr.elf32_getshdr()
         name = curr_shdr.contents.sh_name
-        print(strtab.get(name))
         offset = curr_shdr.contents.sh_offset
         size = curr_shdr.contents.sh_size
+        print(f"[{strtab.get(name)} O {offset}, S {size}]")
         curr = melf.elf_nextscn(curr)
 
     melf.elf_update(libelf.Elf_Cmd.ELF_C_WRITE)
