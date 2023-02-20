@@ -1,5 +1,5 @@
 """
- SPDX-License-Identifier: LGPL-3.0-or-later OR GPL-2.0-or-later
+ SPDX-License-Identifier: MIT
 
  Copyright (C) 2022 Advanced Micro Devices, Inc.
  Author(s): Sonal Santan
@@ -12,7 +12,7 @@ import errno
 import ctypes
 import enum
 
-import elf
+import pylibelf.elf
 
 _libelf = ctypes.CDLL("libelf.so", mode=ctypes.RTLD_GLOBAL)
 
@@ -204,10 +204,10 @@ def _setup():
     _libelf.elf_kind.restype = ctypes.c_uint
     _libelf.elf_kind.argtypes = [ctypes.c_void_p]
 
-    _libelf.elf32_newehdr.restype = ctypes.POINTER(elf.Elf32_Ehdr)
+    _libelf.elf32_newehdr.restype = ctypes.POINTER(pylibelf.elf.Elf32_Ehdr)
     _libelf.elf32_newehdr.argtypes = [ctypes.c_void_p]
 
-    _libelf.elf32_newphdr.restype = ctypes.POINTER(elf.Elf32_Phdr)
+    _libelf.elf32_newphdr.restype = ctypes.POINTER(pylibelf.elf.Elf32_Phdr)
     _libelf.elf32_newphdr.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
 
     _libelf.elf_flagphdr.restype = ctypes.c_uint
@@ -225,7 +225,7 @@ def _setup():
     _libelf.elf_newscn.restype = ctypes.c_void_p
     _libelf.elf_newscn.argtypes = [ctypes.c_void_p]
 
-    _libelf.elf32_getshdr.restype = ctypes.POINTER(elf.Elf32_Shdr)
+    _libelf.elf32_getshdr.restype = ctypes.POINTER(pylibelf.elf.Elf32_Shdr)
     _libelf.elf32_getshdr.argtypes = [ctypes.c_void_p]
 
     _libelf.elf_newdata.restype = ctypes.POINTER(Elf_Data)
@@ -234,8 +234,8 @@ def _setup():
     _libelf.elf_ndxscn.restype = ctypes.c_size_t
     _libelf.elf_ndxscn.argtypes = [ctypes.c_void_p]
 
-    _true_or_error(_libelf.elf_version(1) != elf.EV_NONE)
+    _true_or_error(_libelf.elf_version(1) != pylibelf.elf.EV_NONE)
 
 
-if __name__ == "libelf":
+if __name__ == "pylibelf.libelf":
     _setup()

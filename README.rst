@@ -1,7 +1,7 @@
 .. _README.rst:
 
 ..
-    comment:: SPDX-License-Identifier: Apache-2.0
+    comment:: SPDX-License-Identifier: MIT
     comment:: Copyright (C) 2023 Advanced Micro Devices, Inc.
 
 =========

@@ -1,7 +1,7 @@
 """
- SPDX-License-Identifier: LGPL-2.1-or-later
+ SPDX-License-Identifier: MIT
 
- Copyright (C) 2022 Advanced Micro Devices, Inc.
+ Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
  Author(s): Sonal Santan
 
  ctypes based Python binding for elf.h

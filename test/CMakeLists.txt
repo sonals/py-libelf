@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: MIT
 # Copyright (C) 2023 Advanced Micro Devices, Inc.
 
 message("-- CMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}")
@@ -18,4 +18,4 @@ add_test(NAME strtab
   "${PYLIBELF_SOURCE_DIR}/test/strtab.gold" WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 set_tests_properties(libelf-classic multiple-sections strtab PROPERTIES ENVIRONMENT
-  "PYTHONPATH=${PYLIBELF_SOURCE_DIR}/src/pylibelf")
+  "PYTHONPATH=${PYLIBELF_SOURCE_DIR}/src")
