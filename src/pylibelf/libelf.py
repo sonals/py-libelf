@@ -129,11 +129,15 @@ class Elf_ScnDescriptor:
     def elf32_getshdr(self):
         return _not_null_or_error(_libelf.elf32_getshdr(self.scn))
 
+    def elf_getdata(self):
+        return _not_null_or_error(_libelf.elf_getdata(self.scn, None))
+
     def elf_newdata(self):
         return _not_null_or_error(_libelf.elf_newdata(self.scn))
 
     def elf_ndxscn(self):
         return _libelf.elf_ndxscn(self.scn)
+
 
 class ElfDescriptor:
     """ Binding for Elf descriptor in libelf """
@@ -152,7 +156,14 @@ class ElfDescriptor:
 
     @classmethod
     def fromfile(cls, filename, cmd):
-        filehandle = open(filename, "wb+")
+        mode = None
+        if (cmd == Elf_Cmd.ELF_C_READ):
+            mode = "r"
+        elif (cmd == Elf_Cmd.ELF_C_WRITE):
+            mode = "wb"
+        elif (cmd == Elf_Cmd.ELF_C_RDWR):
+            mode = "r+b"
+        filehandle = open(filename, mode)
         elfnative = _libelf.elf_begin(filehandle.fileno(), cmd, None)
         return cls(_not_null_or_error(elfnative), filehandle)
 
@@ -164,8 +175,14 @@ class ElfDescriptor:
     def elf_kind(self):
         return _libelf.elf_kind(self.elfnative)
 
+    def elf32_getehdr(self):
+        return _not_null_or_error(_libelf.elf32_getehdr(self.elfnative))
+
     def elf32_newehdr(self):
         return _not_null_or_error(_libelf.elf32_newehdr(self.elfnative))
+
+    def elf32_getphdr(self):
+        return _not_null_or_error(_libelf.elf32_newphdr(self.elfnative))
 
     def elf32_newphdr(self, count):
         return _not_null_or_error(_libelf.elf32_newphdr(self.elfnative, count))
@@ -175,6 +192,10 @@ class ElfDescriptor:
 
     def elf_update(self, cmd):
         return _not_null_or_error(_libelf.elf_update(self.elfnative, cmd))
+
+    def elf_getscn(self, index):
+        scn = _libelf.elf_getscn(self.elfnative, index)
+        return Elf_ScnDescriptor(scn) if scn is not None else scn
 
     def elf_nextscn(self, scn):
         if (scn is not None):
@@ -204,8 +225,14 @@ def _setup():
     _libelf.elf_kind.restype = ctypes.c_uint
     _libelf.elf_kind.argtypes = [ctypes.c_void_p]
 
+    _libelf.elf32_getehdr.restype = ctypes.POINTER(pylibelf.elf.Elf32_Ehdr)
+    _libelf.elf32_getehdr.argtypes = [ctypes.c_void_p]
+
     _libelf.elf32_newehdr.restype = ctypes.POINTER(pylibelf.elf.Elf32_Ehdr)
     _libelf.elf32_newehdr.argtypes = [ctypes.c_void_p]
+
+    _libelf.elf32_getphdr.restype = ctypes.POINTER(pylibelf.elf.Elf32_Phdr)
+    _libelf.elf32_getphdr.argtypes = [ctypes.c_void_p]
 
     _libelf.elf32_newphdr.restype = ctypes.POINTER(pylibelf.elf.Elf32_Phdr)
     _libelf.elf32_newphdr.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
@@ -219,6 +246,9 @@ def _setup():
     _libelf.elf32_fsize.restype = ctypes.c_size_t
     _libelf.elf32_fsize.argtypes = [ctypes.c_int, ctypes.c_size_t, ctypes.c_uint]
 
+    _libelf.elf_getscn.restype = ctypes.c_void_p
+    _libelf.elf_getscn.argtypes = [ctypes.c_void_p, ctypes.c_int]
+
     _libelf.elf_nextscn.restype = ctypes.c_void_p
     _libelf.elf_nextscn.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
 
@@ -227,6 +257,9 @@ def _setup():
 
     _libelf.elf32_getshdr.restype = ctypes.POINTER(pylibelf.elf.Elf32_Shdr)
     _libelf.elf32_getshdr.argtypes = [ctypes.c_void_p]
+
+    _libelf.elf_getdata.restype = ctypes.POINTER(Elf_Data)
+    _libelf.elf_getdata.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
 
     _libelf.elf_newdata.restype = ctypes.POINTER(Elf_Data)
     _libelf.elf_newdata.argtypes = [ctypes.c_void_p]

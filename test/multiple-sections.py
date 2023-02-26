@@ -140,7 +140,11 @@ def write_ELF(filename):
 
 if __name__ == "__main__":
     argtab = testhelper.parse_command_line(sys.argv)
-    print(f"Writing ELF file {argtab.filename[0]}")
-    write_ELF(argtab.filename[0])
 
-    testhelper.validate_ELF(argtab.filename[0], argtab.reference)
+    if (argtab.filename != None and argtab.filename[0] != None):
+        print(f"Writing ELF file {argtab.filename[0]}")
+        write_ELF(argtab.filename[0])
+        testhelper.validate_ELF(argtab.filename[0], argtab.reference)
+    elif (argtab.decompile != None and argtab.decompile[0] != None):
+        print(f"Reading ELF file {argtab.decompile[0]}")
+        testhelper.read_ELF(argtab.decompile[0])
