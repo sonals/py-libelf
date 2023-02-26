@@ -31,6 +31,15 @@ def validate_ELF(elfname, goldname):
         goldsig = hashlib.md5(gold).hexdigest()
     assert(sig == goldsig), "ELF headers mismatch for " + elfname
 
+def dump_section_contents(scn):
+    data = ctypes.string_at(scn.contents.d_buf, scn.contents.d_size)
+    for index in range(scn.contents.d_size):
+        if (index % 16 == 0):
+            print()
+        print(f"{hex(data[index])} ", end = '')
+
+    print()
+
 def read_ELF(elfname):
     """
     Read the ELF file headers and display details
@@ -53,6 +62,7 @@ def read_ELF(elfname):
         scn_data = curr.elf_getdata()
         assert(scn_data.contents.d_size == curr_shdr.contents.sh_size)
         print(f"[ {index}] {name} {hex(curr_shdr.contents.sh_size)} {hex(curr_shdr.contents.sh_addralign)}")
+        dump_section_contents(scn_data)
         curr = melf.elf_nextscn(curr)
         index += 1
 
