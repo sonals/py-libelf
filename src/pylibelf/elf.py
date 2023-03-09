@@ -9,6 +9,7 @@
 """
 
 import ctypes
+import struct
 
 Elf32_Half = ctypes.c_ushort
 Elf64_Half = ctypes.c_ushort
@@ -369,6 +370,80 @@ SHF_ORDERED       = (1 << 30)
 
 #SHF_EXCLUDE       = (1U << 31)
 
+STB_LOCAL         = 0
+STB_GLOBAL        = 1
+STB_WEAK          = 2
+STB_LOOS          = 10
+STB_GNU_UNIQUE    = 10
+STB_HIOS          = 12
+STB_LOPROC        = 13
+STB_HIPROC        = 15
+
+STT_NOTYPE        = 0
+STT_OBJECT        = 1
+STT_FUNC          = 2
+STT_SECTION       = 3
+STT_FILE          = 4
+STT_COMMON        = 5
+STT_TLS           = 6
+STT_RELC          = 8
+STT_SRELC         = 9
+STT_LOOS          = 10
+STT_GNU_IFUNC     = 10
+STT_HIOS          = 12
+STT_LOPROC        = 13
+STT_HIPROC        = 15
+
+R_386_NONE        = 0
+R_386_32          = 1
+R_386_PC32        = 2
+R_386_GOT32       = 3
+R_386_PLT32       = 4
+R_386_COPY        = 5
+R_386_GLOB_DAT    = 6
+R_386_JUMP_SLOT   = 7
+R_386_RELATIVE    = 8
+R_386_GOTOFF      = 9
+R_386_GOTPC       = 10
+
+DT_NULL             = 0
+DT_NEEDED           = 1
+DT_PLTRELSZ         = 2
+DT_PLTGOT           = 3
+DT_HASH             = 4
+DT_STRTAB           = 5
+DT_SYMTAB           = 6
+DT_RELA             = 7
+DT_RELASZ           = 8
+DT_RELAENT          = 9
+DT_STRSZ            = 10
+DT_SYMENT           = 11
+DT_INIT             = 12
+DT_FINI             = 13
+DT_SONAME           = 14
+DT_RPATH            = 15
+DT_SYMBOLIC         = 16
+DT_REL              = 17
+DT_RELSZ            = 18
+DT_RELENT           = 19
+DT_PLTREL           = 20
+DT_DEBUG            = 21
+DT_TEXTREL          = 22
+DT_JMPREL           = 23
+DT_BIND_NOW         = 24
+DT_INIT_ARRAY       = 25
+DT_FINI_ARRAY       = 26
+DT_INIT_ARRAYSZ     = 27
+DT_FINI_ARRAYSZ     = 28
+DT_RUNPATH          = 29
+DT_FLAGS            = 30
+DT_PREINIT_ARRAY    = 32
+DT_PREINIT_ARRAYSZ  = 33
+DT_SYMTAB_SHNDX     = 34
+DT_RELRSZ           = 35
+DT_RELR             = 36
+DT_RELRENT          = 37
+DT_ENCODING         = 38
 
 class Elf32_Ehdr(ctypes.Structure):
     """ Python binding for ELF struct Elf32_Ehdr """
@@ -414,3 +489,86 @@ class Elf32_Shdr(ctypes.Structure):
         ("sh_info",      Elf32_Word),
         ("sh_addralign", Elf32_Word),
         ("sh_entsize",   Elf32_Word) ]
+
+class RelocationASection(ctypes.Structure):
+    _fields_ = [
+        ("r_offset", ctypes.c_uint32),
+        ("r_info", ctypes.c_uint32),
+        ("r_addend", ctypes.c_uint32) ]
+
+    def get_size(self):
+        siz = struct.calcsize('4c4c4c')
+        return siz
+
+    def generate(self, offset, info, addend):
+        self.r_offset = offset   # location at which to apply the action
+        self.r_info = info       # index and type of relocation
+        self.r_addend = addend   # Constant addend used to compute value
+
+        siz = self.get_size()
+        bit_stream = ctypes.create_string_buffer(siz)
+        pheader_format = '<III'
+        struct.pack_into(pheader_format, bit_stream, 0,
+                                          self.r_offset,
+                                          self.r_info,
+                                          self.r_addend)
+
+        return bit_stream
+
+class DynamicSection(ctypes.Structure):
+    _fields_ = [
+        ("d_tag", ctypes.c_uint32),
+        ("d_val", ctypes.c_uint32) ]
+
+    def get_size(self):
+        siz = struct.calcsize('4c4c')
+        return siz
+
+    def generate(self, tag, val):
+        self.d_tag = tag         # DT_RELA(7) DT_RELASZ(8)
+        self.d_val = val         # pointer to RELA or RELASZ size
+
+        siz = self.get_size()
+        bit_stream = ctypes.create_string_buffer(siz)
+        pheader_format = '<II'
+        struct.pack_into(pheader_format, bit_stream, 0,
+                                          self.d_tag,
+                                          self.d_val)
+
+        return bit_stream
+
+class SymbolSection(ctypes.Structure):
+    _fields_ = [
+        ("st_name", ctypes.c_uint32),
+        ("st_value", ctypes.c_uint32),
+        ("st_size", ctypes.c_uint32),
+        ("st_info", ctypes.c_uint8),
+        ("st_other", ctypes.c_uint8),
+        ("st_shndx", ctypes.c_uint16) ]
+
+    def get_size(self):
+        siz = struct.calcsize('4c4c4c1c1c2c')
+        return siz
+
+    def generate(self, index, size, stype, shndx):
+        self.st_name = index     # index in string tbl
+        self.st_value = 0        # value of the symbol
+        self.st_size = size      # associated symbol size
+        self.st_info = stype     # type and binding attributes
+        self.st_other = 0        # no defined
+        self.st_shndx = shndx    # associated section index
+
+        siz = self.get_size()
+        bit_stream = ctypes.create_string_buffer(siz)
+        pheader_format = '<IIIBBH'
+        struct.pack_into(pheader_format, bit_stream, 0,
+                                          self.st_name,
+                                          self.st_value,
+                                          self.st_size,
+                                          self.st_info,
+                                          self.st_other,
+                                          self.st_shndx)
+
+        return bit_stream
+
+
