@@ -163,6 +163,9 @@ class ElfDescriptor:
             mode = "wb"
         elif (cmd == Elf_Cmd.ELF_C_RDWR):
             mode = "r+b"
+        else:
+            assert False, f"Command {cmd} not supported"
+
         filehandle = open(filename, mode)
         elfnative = _libelf.elf_begin(filehandle.fileno(), cmd, None)
         return cls(_not_null_or_error(elfnative), filehandle)
