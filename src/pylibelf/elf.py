@@ -13,14 +13,21 @@ import struct
 
 Elf32_Half = ctypes.c_ushort
 Elf64_Half = ctypes.c_ushort
+
 Elf32_Word = ctypes.c_uint
-Elf32_Sword = ctypes.c_int
 Elf64_Word = ctypes.c_uint
+
+Elf32_Sword = ctypes.c_int
 Elf64_Sword = ctypes.c_int
+
 Elf32_Addr = ctypes.c_uint
-Elf32_Off = ctypes.c_uint
 Elf64_Addr = ctypes.c_ulonglong
+
+Elf32_Off = ctypes.c_uint
 Elf64_Off = ctypes.c_ulonglong
+
+Elf32_Section = ctypes.c_ushort
+Elf64_Section = ctypes.c_ushort
 
 EI_NIDENT = 16
 
@@ -490,85 +497,34 @@ class Elf32_Shdr(ctypes.Structure):
         ("sh_addralign", Elf32_Word),
         ("sh_entsize",   Elf32_Word) ]
 
-class RelocationASection(ctypes.Structure):
+
+class Elf32_Rela(ctypes.Structure):
+    """ Python binding for ELF struct Elf32_Rela """
     _fields_ = [
-        ("r_offset", ctypes.c_uint32),
-        ("r_info", ctypes.c_uint32),
-        ("r_addend", ctypes.c_uint32) ]
+        ("r_offset", Elf32_Addr),
+        ("r_info",   Elf32_Word),
+        ("r_addend", Elf32_Sword) ]
 
-    def get_size(self):
-        siz = struct.calcsize('4c4c4c')
-        return siz
 
-    def generate(self, offset, info, addend):
-        self.r_offset = offset   # location at which to apply the action
-        self.r_info = info       # index and type of relocation
-        self.r_addend = addend   # Constant addend used to compute value
+class d_un(ctypes.Union):
+    """ Python binding for ELF struct Elf32_Dyn::d_un """
+    _fields_ = [("d_val", Elf32_Word),
+                ("d_ptr", Elf32_Addr)]
 
-        siz = self.get_size()
-        bit_stream = ctypes.create_string_buffer(siz)
-        pheader_format = '<III'
-        struct.pack_into(pheader_format, bit_stream, 0,
-                                          self.r_offset,
-                                          self.r_info,
-                                          self.r_addend)
 
-        return bit_stream
-
-class DynamicSection(ctypes.Structure):
+class Elf32_Dyn(ctypes.Structure):
+    """ Python binding for ELF struct Elf32_Dyn """
     _fields_ = [
-        ("d_tag", ctypes.c_uint32),
-        ("d_val", ctypes.c_uint32) ]
+        ("d_tag", Elf32_Sword),
+        ("d_val", d_un)]
 
-    def get_size(self):
-        siz = struct.calcsize('4c4c')
-        return siz
 
-    def generate(self, tag, val):
-        self.d_tag = tag         # DT_RELA(7) DT_RELASZ(8)
-        self.d_val = val         # pointer to RELA or RELASZ size
-
-        siz = self.get_size()
-        bit_stream = ctypes.create_string_buffer(siz)
-        pheader_format = '<II'
-        struct.pack_into(pheader_format, bit_stream, 0,
-                                          self.d_tag,
-                                          self.d_val)
-
-        return bit_stream
-
-class SymbolSection(ctypes.Structure):
+class Elf32_Sym(ctypes.Structure):
+    """ Python binding for ELF struct Elf32_Sym """
     _fields_ = [
-        ("st_name", ctypes.c_uint32),
-        ("st_value", ctypes.c_uint32),
-        ("st_size", ctypes.c_uint32),
-        ("st_info", ctypes.c_uint8),
-        ("st_other", ctypes.c_uint8),
-        ("st_shndx", ctypes.c_uint16) ]
-
-    def get_size(self):
-        siz = struct.calcsize('4c4c4c1c1c2c')
-        return siz
-
-    def generate(self, index, size, stype, shndx):
-        self.st_name = index     # index in string tbl
-        self.st_value = 0        # value of the symbol
-        self.st_size = size      # associated symbol size
-        self.st_info = stype     # type and binding attributes
-        self.st_other = 0        # no defined
-        self.st_shndx = shndx    # associated section index
-
-        siz = self.get_size()
-        bit_stream = ctypes.create_string_buffer(siz)
-        pheader_format = '<IIIBBH'
-        struct.pack_into(pheader_format, bit_stream, 0,
-                                          self.st_name,
-                                          self.st_value,
-                                          self.st_size,
-                                          self.st_info,
-                                          self.st_other,
-                                          self.st_shndx)
-
-        return bit_stream
-
-
+        ("st_name",  Elf32_Word),
+        ("st_value", Elf32_Addr),
+        ("st_size",  Elf32_Word),
+        ("st_info",  ctypes.c_ubyte),
+        ("st_other", ctypes.c_ubyte),
+        ("st_shndx", Elf32_Section)]
