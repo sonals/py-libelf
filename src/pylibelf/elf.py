@@ -506,7 +506,7 @@ class Elf32_Rela(ctypes.Structure):
         ("r_addend", Elf32_Sword) ]
 
 
-class d_un(ctypes.Union):
+class _d_un(ctypes.Union):
     """ Python binding for ELF struct Elf32_Dyn::d_un """
     _fields_ = [("d_val", Elf32_Word),
                 ("d_ptr", Elf32_Addr)]
@@ -516,7 +516,7 @@ class Elf32_Dyn(ctypes.Structure):
     """ Python binding for ELF struct Elf32_Dyn """
     _fields_ = [
         ("d_tag", Elf32_Sword),
-        ("d_val", d_un)]
+        ("d_un", _d_un)]
 
 
 class Elf32_Sym(ctypes.Structure):
