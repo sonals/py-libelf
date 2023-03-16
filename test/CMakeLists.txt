@@ -4,7 +4,7 @@
 
 file(COPY "${PYLIBELF_SOURCE_DIR}/.pylintrc" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
-foreach(sample libelf-classic multiple-sections strtab)
+foreach(sample libelf-classic multiple-sections strtab symbol)
 
   add_test(NAME ${sample}
     COMMAND "${PYLIBELF_SOURCE_DIR}/test/${sample}.py" "-o" "${sample}.elf" "-r"

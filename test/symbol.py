@@ -16,7 +16,7 @@ import pylibelf.libelf
 
 import testhelper
 
-def write_Symtab(melf, strtab):
+def write_Symtab(melf, strtab, textindex):
     dstrtab = testhelper.ElfStringTable()
     symtab = testhelper.ElfSymbolTable()
     scn3 = melf.elf_newscn()
@@ -32,13 +32,18 @@ def write_Symtab(melf, strtab):
     shdr3.contents.sh_flags = pylibelf.elf.SHF_STRINGS | pylibelf.elf.SHF_ALLOC
     shdr3.contents.sh_entsize = 0
 
-    symtab.add(pylibelf.elf.Elf32_Sym(dstrtab.add("myfunc"), 0, 0, 0, 0, scn3.elf_ndxscn()))
-    symtab.add(pylibelf.elf.Elf32_Sym(dstrtab.add("hisfunc"), 0, 0, 0, 0, scn3.elf_ndxscn()))
-    symtab.add(pylibelf.elf.Elf32_Sym(dstrtab.add("herfunc"), 0, 0, 0, 0, scn3.elf_ndxscn()))
+    defaultlocal = dstrtab.add("")
+    symtab.add(pylibelf.elf.Elf32_Sym(defaultlocal, 0, 0, 0, 0, pylibelf.elf.SHN_UNDEF))
 
-    symtab.add(pylibelf.elf.Elf32_Sym(dstrtab.add("myvar"), 0, 0, 0, 0, scn3.elf_ndxscn()))
-    symtab.add(pylibelf.elf.Elf32_Sym(dstrtab.add("hisvar"), 0, 0, 0, 0, scn3.elf_ndxscn()))
-    symtab.add(pylibelf.elf.Elf32_Sym(dstrtab.add("hervar"), 0, 0, 0, 0, scn3.elf_ndxscn()))
+    syminfo = pylibelf.elf.ELF32_ST_INFO(pylibelf.elf.STB_GLOBAL, pylibelf.elf.STT_FUNC)
+    symtab.add(pylibelf.elf.Elf32_Sym(dstrtab.add("myfunc"), 0, 0, syminfo, 0, textindex))
+    symtab.add(pylibelf.elf.Elf32_Sym(dstrtab.add("hisfunc"), 0, 0, syminfo, 0, textindex))
+    symtab.add(pylibelf.elf.Elf32_Sym(dstrtab.add("herfunc"), 0, 0, syminfo, 0, textindex))
+
+    syminfo = pylibelf.elf.ELF32_ST_INFO(pylibelf.elf.STB_GLOBAL, pylibelf.elf.STT_OBJECT)
+    symtab.add(pylibelf.elf.Elf32_Sym(dstrtab.add("myvar"), 0, 0, syminfo, 0, textindex))
+    symtab.add(pylibelf.elf.Elf32_Sym(dstrtab.add("hisvar"), 0, 0, syminfo, 0, textindex))
+    symtab.add(pylibelf.elf.Elf32_Sym(dstrtab.add("hervar"), 0, 0, syminfo, 0, textindex))
 
     dsymsdata = dstrtab.packsyms()
     data3.contents.d_size = ctypes.sizeof(dsymsdata)
@@ -60,7 +65,9 @@ def write_Symtab(melf, strtab):
     shdr4.contents.sh_name = strtab.add(".dynsym")
     shdr4.contents.sh_type = pylibelf.elf.SHT_DYNSYM
     shdr4.contents.sh_flags = pylibelf.elf.SHF_ALLOC
-    shdr4.contents.sh_entsize = 0
+    shdr4.contents.sh_entsize = ctypes.sizeof(pylibelf.elf.Elf32_Sym)
+    shdr4.contents.sh_link = scn3.elf_ndxscn()
+    shdr4.contents.sh_info = defaultlocal + 1
 
 
 def write_ELF(filename):
@@ -85,19 +92,21 @@ def write_ELF(filename):
     scn = melf.elf_newscn()
     data = scn.elf_newdata()
 
-    hash_words = (ctypes.c_uint * 3)(0x01234567, 0x89abcdef, 0xdeadc0de)
+    text_words = (ctypes.c_uint * 16)(0x01234567, 0x89abcdef, 0xdeadc0de, 0xdeadc0de,
+                                      0xdeadc0de, 0xdeadc0de, 0xdeadc0de, 0xdeadc0de,
+                                      0xdeadc0de, 0xdeadc0de, 0xdeadc0de, 0xdeadc0de,
+                                      0xdeadc0de, 0xdeadc0de, 0xdeadc0de, 0xdeadc0de)
     data.contents.d_align = 4
     data.contents.d_off = 0
-    data.contents.d_buf = ctypes.cast(hash_words, ctypes.c_void_p)
+    data.contents.d_buf = ctypes.cast(text_words, ctypes.c_void_p)
     data.contents.d_type = pylibelf.libelf.Elf_Type.ELF_T_WORD
-    data.contents.d_size = ctypes.sizeof(hash_words)
+    data.contents.d_size = ctypes.sizeof(text_words)
     data.contents.d_version = pylibelf.elf.EV_CURRENT
 
     shdr = scn.elf32_getshdr()
-    shdr.contents.sh_name = strtab.add(".foo")
-    shdr.contents.sh_type = pylibelf.elf.SHT_HASH
-    shdr.contents.sh_flags = pylibelf.elf.SHF_ALLOC
-    shdr.contents.sh_link = 2
+    shdr.contents.sh_name = strtab.add(".text")
+    shdr.contents.sh_type = pylibelf.elf.SHT_PROGBITS
+    shdr.contents.sh_flags = pylibelf.elf.SHF_ALLOC | pylibelf.elf.SHF_EXECINSTR
     shdr.contents.sh_entsize = 0
 
     scn2 = melf.elf_newscn()
@@ -113,7 +122,7 @@ def write_ELF(filename):
     shdr2.contents.sh_flags = pylibelf.elf.SHF_STRINGS | pylibelf.elf.SHF_ALLOC
     shdr2.contents.sh_entsize = 0
 
-    write_Symtab(melf, strtab)
+    write_Symtab(melf, strtab, scn.elf_ndxscn())
     symsdata = strtab.packsyms()
     data2.contents.d_size = ctypes.sizeof(symsdata)
     data2.contents.d_buf = ctypes.cast(symsdata, ctypes.c_void_p)

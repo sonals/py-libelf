@@ -101,9 +101,9 @@ class ElfStringTable:
         index = 0
         for item in self.syms:
             arr = bytes(item, "utf-8")
-            for element in arr:
-                self.data[index] = element
-                index += 1
+            subdata = ctypes.cast(ctypes.addressof(self.data) + index, ctypes.c_void_p)
+            ctypes.memmove(subdata, arr, len(arr))
+            index += len(arr)
             self.data[index] = b'\0'
             index += 1
         return self.data
@@ -115,6 +115,11 @@ class ElfStringTable:
     def __str__(self):
         return f"{self.syms}\n{self.data}"
 
+    def _pack(self, arr, index):
+        subdata = ctypes.cast(ctypes.addressof(self.data) + index, ctypes.c_void_p)
+        ctypes.memmove(subdata, arr, len(arr))
+        index += len(arr)
+        return index
 
 class ElfSymbolTable(ElfStringTable):
     def __init__(self, data = None, size = 0):
@@ -131,10 +136,10 @@ class ElfSymbolTable(ElfStringTable):
         self.data = ctypes.create_string_buffer(self.size)
         index = 0
         for item in self.syms:
-            arr = bytearray(item)
-            for element in arr:
-                self.data[index] = element
-                index += 1
+            arr = bytes(item)
+            subdata = ctypes.cast(ctypes.addressof(self.data) + index, ctypes.c_void_p)
+            ctypes.memmove(subdata, arr, len(arr))
+            index += len(arr)
         return self.data
 
     def get(self, pos):
