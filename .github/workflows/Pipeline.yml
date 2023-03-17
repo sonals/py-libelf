@@ -1,7 +1,8 @@
 name: CI
 
 on: [push, pull_request]
-
+concurrency:
+  group: ${{ github.workflow }}
 jobs:
   Dependencies:
     runs-on: Ubuntu-22.04
@@ -21,7 +22,7 @@ jobs:
           fetch-depth: 0
   Build:
     runs-on: Ubuntu-22.04
-    needs: Checkout
+    needs: [Dependencies, Checkout]
     steps:
       - name: Build and test
         run: |
@@ -31,3 +32,4 @@ jobs:
           make
           make install
           make test
+        shell: bash
