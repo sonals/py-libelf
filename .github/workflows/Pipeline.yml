@@ -18,10 +18,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-  Build:
-    runs-on: Ubuntu-22.04
-    needs: [Dependencies, Checkout]
-    steps:
       - name: Build and test
         run: |
           ls -lah
