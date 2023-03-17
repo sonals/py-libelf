@@ -15,10 +15,6 @@ jobs:
           sudo apt install -y binutils cmake make
           sudo apt install -y pylint python3-dev
           dpkg-query -s libelf-dev
-  Checkout:
-    runs-on: ubuntu-22.04
-    needs: Dependencies
-    steps:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Build and test
