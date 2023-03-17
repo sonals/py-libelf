@@ -1,17 +1,20 @@
 name: CI
 
-on: [push, pull_request]
+on: [pull_request]
+
 concurrency:
   group: ${{ github.workflow }}
+
 jobs:
   Dependencies:
-    runs-on: Ubuntu-22.04
+    runs-on: ubuntu-22.04
     steps:
-      - name: Build and test
+      - name: Install dependencies
         run: |
           sudo apt install -y libelf-dev elfutils
           sudo apt install -y binutils cmake make
           sudo apt install -y pylint python3-dev
+          dpkg-query -s libelf-dev
   Checkout:
     runs-on: ubuntu-22.04
     needs: Dependencies
@@ -20,6 +23,7 @@ jobs:
         uses: actions/checkout@v3
       - name: Build and test
         run: |
+          dpkg-query -s libelf-dev
           ls -lah
           pwd
           mkdir build
