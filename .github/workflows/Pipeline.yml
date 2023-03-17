@@ -26,6 +26,8 @@ jobs:
     steps:
       - name: Build and test
         run: |
+          ls -lah
+          pwd
           mkdir build
           cd build
           cmake ..
