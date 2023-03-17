@@ -1,12 +1,9 @@
 name: CI
 
-on: [pull_request]
-
-concurrency:
-  group: ${{ github.workflow }}
+on: [push, pull_request]
 
 jobs:
-  Dependencies:
+  py-libelf-bulid-test:
     runs-on: ubuntu-22.04
     steps:
       - name: Install dependencies
@@ -14,14 +11,10 @@ jobs:
           sudo apt install -y libelf-dev elfutils
           sudo apt install -y binutils cmake make
           sudo apt install -y pylint python3-dev
-          dpkg-query -s libelf-dev
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Build and test
         run: |
-          dpkg-query -s libelf-dev
-          ls -lah
-          pwd
           mkdir build
           cd build
           cmake ..
