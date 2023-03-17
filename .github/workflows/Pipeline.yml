@@ -17,9 +17,7 @@ jobs:
     needs: Dependencies
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+        uses: actions/checkout@v3
   Build:
     runs-on: Ubuntu-22.04
     needs: [Dependencies, Checkout]
