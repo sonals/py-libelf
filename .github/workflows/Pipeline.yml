@@ -1,0 +1,35 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  Checkout:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+  Dependencies:
+    runs-on: Ubuntu-22.04
+    needs: Checkout
+    steps:
+      - name: Build and test
+        run: |
+          sudo apt install libelf-dev
+          sudo apt install binutils
+          sudo apt install elfutils
+          sudo apt install pylint
+          sudo apt install python3-dev
+  Build:
+    runs-on: Ubuntu-22.04
+    needs: Dependencies
+    steps:
+      - name: Build and test
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          make
+          make install
+          make test
