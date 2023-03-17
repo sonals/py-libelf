@@ -520,6 +520,16 @@ class Elf32_Rela(ctypes.Structure):
         ("r_addend", Elf32_Sword) ]
 
 
+def ELF32_R_SYM(val):
+    return ((val) >> 8)
+
+def ELF32_R_TYPE(val):
+    return ((val) & 0xff)
+
+def ELF32_R_INFO(rsym, rtype):
+    return (((rsym) << 8) + ((rtype) & 0xff))
+
+
 class _d_un(ctypes.Union):
     """ Python binding for ELF struct Elf32_Dyn::d_un """
     _fields_ = [("d_val", Elf32_Word),
