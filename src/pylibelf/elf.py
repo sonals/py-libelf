@@ -320,6 +320,20 @@ PF_R		= (1 << 2)
 PF_MASKOS	= 0x0ff00000
 PF_MASKPROC	= 0xf0000000
 
+SHN_UNDEF	= 0
+SHN_LORESERVE	= 0xff00
+SHN_LOPROC	= 0xff00
+SHN_BEFORE	= 0xff00
+
+SHN_AFTER	= 0xff01
+
+SHN_HIPROC	= 0xff1f
+SHN_LOOS	= 0xff20
+SHN_HIOS	= 0xff3f
+SHN_ABS		= 0xfff1
+SHN_COMMON	= 0xfff2
+SHN_XINDEX	= 0xffff
+
 
 SHT_NULL =   0
 SHT_PROGBITS =   1
@@ -506,7 +520,7 @@ class Elf32_Rela(ctypes.Structure):
         ("r_addend", Elf32_Sword) ]
 
 
-class d_un(ctypes.Union):
+class _d_un(ctypes.Union):
     """ Python binding for ELF struct Elf32_Dyn::d_un """
     _fields_ = [("d_val", Elf32_Word),
                 ("d_ptr", Elf32_Addr)]
@@ -516,7 +530,7 @@ class Elf32_Dyn(ctypes.Structure):
     """ Python binding for ELF struct Elf32_Dyn """
     _fields_ = [
         ("d_tag", Elf32_Sword),
-        ("d_val", d_un)]
+        ("d_un", _d_un)]
 
 
 class Elf32_Sym(ctypes.Structure):
@@ -528,3 +542,12 @@ class Elf32_Sym(ctypes.Structure):
         ("st_info",  ctypes.c_ubyte),
         ("st_other", ctypes.c_ubyte),
         ("st_shndx", Elf32_Section)]
+
+def ELF32_ST_BIND(val):
+    return (((ctypes.c_ubyte) (val)) >> 4)
+
+def ELF32_ST_TYPE(val):
+    return ((val) & 0xf)
+
+def ELF32_ST_INFO(sbind, stype):
+    return (((sbind) << 4) + ((stype) & 0xf))

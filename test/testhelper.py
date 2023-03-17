@@ -96,14 +96,18 @@ class ElfStringTable:
         self.size += (len(item) + 1)
         return pos
 
+    def _pack(self, arr, index):
+        subdata = ctypes.cast(ctypes.addressof(self.data) + index, ctypes.c_void_p)
+        ctypes.memmove(subdata, arr, len(arr))
+        index += len(arr)
+        return index
+
     def packsyms(self):
         self.data = ctypes.create_string_buffer(self.size)
         index = 0
         for item in self.syms:
             arr = bytes(item, "utf-8")
-            for element in arr:
-                self.data[index] = element
-                index += 1
+            index = self._pack(arr, index)
             self.data[index] = b'\0'
             index += 1
         return self.data
@@ -111,3 +115,29 @@ class ElfStringTable:
     def get(self, pos):
         item = ctypes.string_at(self.data[pos:])
         return item.decode("utf-8")
+
+    def __str__(self):
+        return f"{self.syms}\n{self.data}"
+
+class ElfSymbolTable(ElfStringTable):
+    def __init__(self, data = None, size = 0):
+        super().__init__(data, size)
+
+    def add(self, item):
+        pos = self.size
+        self.syms.append(item)
+        assert(ctypes.sizeof(item) == ctypes.sizeof(pylibelf.elf.Elf32_Sym)), f"Illegal item {item}"
+        self.size += ctypes.sizeof(item)
+        return pos
+
+    def packsyms(self):
+        self.data = ctypes.create_string_buffer(self.size)
+        index = 0
+        for item in self.syms:
+            arr = bytes(item)
+            index = self._pack(arr, index)
+        return self.data
+
+    def get(self, pos):
+        item = Elf32_Sym.from_buffer(ctypes.string_at(self.data[pos:]))
+        return item
