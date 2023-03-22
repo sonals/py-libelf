@@ -521,13 +521,13 @@ class Elf32_Rela(ctypes.Structure):
 
 
 def ELF32_R_SYM(val):
-    return ((val) >> 8)
+    return (val >> 8)
 
 def ELF32_R_TYPE(val):
-    return ((val) & 0xff)
+    return (val & 0xff)
 
 def ELF32_R_INFO(rsym, rtype):
-    return (((rsym) << 8) + ((rtype) & 0xff))
+    return ((rsym << 8) + (rtype & 0xff))
 
 
 class _d_un(ctypes.Union):
@@ -554,10 +554,57 @@ class Elf32_Sym(ctypes.Structure):
         ("st_shndx", Elf32_Section)]
 
 def ELF32_ST_BIND(val):
-    return (((ctypes.c_ubyte) (val)) >> 4)
+    return (((ctypes.c_ubyte)(val)) >> 4)
 
 def ELF32_ST_TYPE(val):
-    return ((val) & 0xf)
+    return (val & 0xf)
 
 def ELF32_ST_INFO(sbind, stype):
-    return (((sbind) << 4) + ((stype) & 0xf))
+    return ((sbind << 4) + (stype & 0xf))
+
+
+R_M32R_NONE               = 0
+R_M32R_16                 = 1
+R_M32R_32                 = 2
+R_M32R_24                 = 3
+R_M32R_10_PCREL           = 4
+R_M32R_18_PCREL           = 5
+R_M32R_26_PCREL           = 6
+R_M32R_HI16_ULO           = 7
+R_M32R_HI16_SLO           = 8
+R_M32R_LO16               = 9
+R_M32R_SDA16              = 10
+R_M32R_GNU_VTINHERIT      = 11
+R_M32R_GNU_VTENTRY        = 12
+
+R_M32R_16_RELA            = 33
+R_M32R_32_RELA            = 34
+R_M32R_24_RELA            = 35
+R_M32R_10_PCREL_RELA      = 36
+R_M32R_18_PCREL_RELA      = 37
+R_M32R_26_PCREL_RELA      = 38
+R_M32R_HI16_ULO_RELA      = 39
+R_M32R_HI16_SLO_RELA      = 40
+R_M32R_LO16_RELA          = 41
+R_M32R_SDA16_RELA         = 42
+R_M32R_RELA_GNU_VTINHERIT = 43
+R_M32R_RELA_GNU_VTENTRY   = 44
+R_M32R_REL32              = 45
+R_M32R_GOT24              = 48
+R_M32R_26_PLTREL          = 49
+R_M32R_COPY               = 50
+R_M32R_GLOB_DAT           = 51
+R_M32R_JMP_SLOT           = 52
+R_M32R_RELATIVE           = 53
+R_M32R_GOTOFF             = 54
+R_M32R_GOTPC24            = 55
+R_M32R_GOT16_HI_ULO       = 56
+R_M32R_GOT16_HI_SLO       = 57
+R_M32R_GOT16_LO           = 58
+R_M32R_GOTPC_HI_ULO       = 59
+R_M32R_GOTPC_HI_SLO       = 60
+R_M32R_GOTPC_LO           = 61
+R_M32R_GOTOFF_HI_ULO      = 62
+R_M32R_GOTOFF_HI_SLO      = 63
+R_M32R_GOTOFF_LO          = 64
+R_M32R_NUM                = 256

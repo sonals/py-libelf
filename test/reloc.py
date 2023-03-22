@@ -16,6 +16,40 @@ import pylibelf.libelf
 
 import testhelper
 
+def write_Rela(melf, strtab, symtab, textindex, dynsymindex):
+    rtab = testhelper.ElfRelaTable()
+    scn3 = melf.elf_newscn()
+    data3 = scn3.elf_newdata()
+    data3.contents.d_align = 8
+    data3.contents.d_off = 0
+    data3.contents.d_type = pylibelf.libelf.Elf_Type.ELF_T_BYTE
+    data3.contents.d_version = pylibelf.elf.EV_CURRENT
+
+    shdr3 = scn3.elf32_getshdr()
+    shdr3.contents.sh_name = strtab.add(".rela.dyn")
+    shdr3.contents.sh_type = pylibelf.elf.SHT_RELA
+    shdr3.contents.sh_flags = pylibelf.elf.SHF_ALLOC
+    shdr3.contents.sh_entsize = ctypes.sizeof(pylibelf.elf.Elf32_Rela)
+    shdr3.contents.sh_link = dynsymindex
+    shdr3.contents.sh_info = textindex
+
+    pos = 0
+    # Some random location in the text segment
+    addr = 8
+    index = 0
+    while (pos < symtab.space()):
+        sym = symtab.get(pos)
+        rtab.add(pylibelf.elf.Elf32_Rela(addr, pylibelf.elf.ELF32_R_INFO(index, pylibelf.elf.R_M32R_32_RELA), 0))
+        pos += ctypes.sizeof(pylibelf.elf.Elf32_Sym)
+        # Another random location in text segment
+        addr += 16
+        index += 1
+
+    rdata = rtab.packsyms()
+    data3.contents.d_size = ctypes.sizeof(rdata)
+    data3.contents.d_buf = ctypes.cast(rdata, ctypes.c_void_p)
+
+
 def write_Symtab(melf, strtab, textindex):
     dstrtab = testhelper.ElfStringTable()
     symtab = testhelper.ElfSymbolTable()
@@ -69,6 +103,7 @@ def write_Symtab(melf, strtab, textindex):
     shdr4.contents.sh_link = scn3.elf_ndxscn()
     shdr4.contents.sh_info = defaultlocal + 1
 
+    write_Rela(melf, strtab, symtab, textindex, scn4.elf_ndxscn())
 
 def write_ELF(filename):
     strtab = testhelper.ElfStringTable()
@@ -92,7 +127,19 @@ def write_ELF(filename):
     scn = melf.elf_newscn()
     data = scn.elf_newdata()
 
-    text_words = (ctypes.c_uint * 16)(0x01234567, 0x89abcdef, 0xdeadc0de, 0xdeadc0de,
+    text_words = (ctypes.c_uint * 64)(0x01234567, 0x89abcdef, 0xdeadc0de, 0xdeadc0de,
+                                      0xdeadc0de, 0xdeadc0de, 0xdeadc0de, 0xdeadc0de,
+                                      0xdeadc0de, 0xdeadc0de, 0xdeadc0de, 0xdeadc0de,
+                                      0xdeadc0de, 0xdeadc0de, 0xdeadc0de, 0xdeadc0de,
+                                      0x01234567, 0x89abcdef, 0xdeadc0de, 0xdeadc0de,
+                                      0xdeadc0de, 0xdeadc0de, 0xdeadc0de, 0xdeadc0de,
+                                      0xdeadc0de, 0xdeadc0de, 0xdeadc0de, 0xdeadc0de,
+                                      0xdeadc0de, 0xdeadc0de, 0xdeadc0de, 0xdeadc0de,
+                                      0x01234567, 0x89abcdef, 0xdeadc0de, 0xdeadc0de,
+                                      0xdeadc0de, 0xdeadc0de, 0xdeadc0de, 0xdeadc0de,
+                                      0xdeadc0de, 0xdeadc0de, 0xdeadc0de, 0xdeadc0de,
+                                      0xdeadc0de, 0xdeadc0de, 0xdeadc0de, 0xdeadc0de,
+                                      0x01234567, 0x89abcdef, 0xdeadc0de, 0xdeadc0de,
                                       0xdeadc0de, 0xdeadc0de, 0xdeadc0de, 0xdeadc0de,
                                       0xdeadc0de, 0xdeadc0de, 0xdeadc0de, 0xdeadc0de,
                                       0xdeadc0de, 0xdeadc0de, 0xdeadc0de, 0xdeadc0de)
