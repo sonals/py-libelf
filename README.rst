@@ -10,6 +10,10 @@ PY-LIBELF
 
 Python bindings for ``libelf`` which is part of elfutils, https://sourceware.org/elfutils/
 
+.. image:: https://github.com/sonals/py-libelf/actions/workflows/Pipeline.yml/badge.svg
+
+-------------------------------------------------------------------------------
+
 Install
 *******
 
