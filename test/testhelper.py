@@ -83,45 +83,64 @@ class ElfStringTable:
     used to build ELF .shstrtab section
     """
     def __init__(self, data = None, size = 0):
-        self.size = size
-        self.syms = []
-        if (data != None):
-            self.data = ctypes.string_at(data, size)
-        else:
-            self.data = None
+        self._size = size
+        self._syms = []
+        self._data = None
+        if (data == None):
+            return
+        self._data = ctypes.string_at(data, size)
+        # Populate our syms list
+        pos = 0
+        while (pos < size):
+            item = self.get(pos)
+            self._syms.append(item)
+            pos += len(item)
+            # Go past the null char
+            pos += 1
+
+    # Support len() operator on the table e.g. len(mystab)
+    def __len__(self):
+        return len(self._syms)
+
+    # Support indexing into the table e.g. mystab[i]
+    def __getitem__(self, index):
+        return self._syms[index]
 
     def add(self, item):
-        pos = self.size
-        self.syms.append(item)
-        self.size += (len(item) + 1)
+        pos = self._size
+        self._syms.append(item)
+        self._size += (len(item) + 1)
         return pos
 
     def _pack(self, arr, index):
-        subdata = ctypes.cast(ctypes.addressof(self.data) + index, ctypes.c_void_p)
+        subdata = ctypes.cast(ctypes.addressof(self._data) + index, ctypes.c_void_p)
         ctypes.memmove(subdata, arr, len(arr))
         index += len(arr)
         return index
 
     def packsyms(self):
-        self.data = ctypes.create_string_buffer(self.size)
+        self._data = ctypes.create_string_buffer(self._size)
         index = 0
-        for item in self.syms:
+        for item in self._syms:
             arr = bytes(item, "utf-8")
             index = self._pack(arr, index)
-            self.data[index] = b'\0'
+            self._data[index] = b'\0'
             index += 1
-        return self.data
+        return self._data
 
     def get(self, pos):
-        assert(pos < self.size), f"Illegal offset into table storage"
-        item = ctypes.string_at(self.data[pos:])
+        assert(pos < self._size), f"Illegal offset into table storage"
+        item = ctypes.string_at(self._data[pos:])
         return item.decode("utf-8")
 
     def space(self):
-        return self.size
+        return self._size
 
     def __str__(self):
-        return f"{self.syms}\n{self.data}"
+        return f"{self._syms}\n{self._data}"
+
+# TODO: Move to python Generics so can use the same class for
+# ElfRelaTable and ElfSymbolTable
 
 class ElfSymbolTable(ElfStringTable):
     """
@@ -130,25 +149,32 @@ class ElfSymbolTable(ElfStringTable):
     """
     def __init__(self, data = None, size = 0):
         super().__init__(data, size)
+        if (self._data == None):
+            return
+        # Populate our syms list
+        pos = 0
+        while (pos < self._size):
+            self._syms.append(self.get(pos))
+            pos += ctypes.sizeof(pylibelf.elf.Elf32_Sym)
 
     def add(self, item):
-        pos = self.size
-        self.syms.append(item)
+        pos = self._size
+        self._syms.append(item)
         assert(ctypes.sizeof(item) == ctypes.sizeof(pylibelf.elf.Elf32_Sym)), f"Illegal item {item}"
-        self.size += ctypes.sizeof(item)
+        self._size += ctypes.sizeof(item)
         return pos
 
     def packsyms(self):
-        self.data = ctypes.create_string_buffer(self.size)
+        self._data = ctypes.create_string_buffer(self._size)
         index = 0
-        for item in self.syms:
+        for item in self._syms:
             arr = bytes(item)
             index = self._pack(arr, index)
-        return self.data
+        return self._data
 
     def get(self, pos):
-        assert(pos < self.size), f"Illegal offset into table storage"
-        item = pylibelf.elf.Elf32_Sym.from_address(ctypes.addressof(self.data) + pos)
+        assert(pos < self._size), f"Illegal offset into table storage"
+        item = pylibelf.elf.Elf32_Sym.from_address(ctypes.addressof(self._data) + pos)
         return item
 
 class ElfRelaTable(ElfStringTable):
@@ -158,23 +184,30 @@ class ElfRelaTable(ElfStringTable):
     """
     def __init__(self, data = None, size = 0):
         super().__init__(data, size)
+        if (self._data == None):
+            return
+        # Populate our syms list
+        pos = 0
+        while (pos < self._size):
+            self._syms.append(self.get(pos))
+            pos += ctypes.sizeof(pylibelf.elf.Elf32_Rela)
 
     def add(self, item):
-        pos = self.size
-        self.syms.append(item)
+        pos = self._size
+        self._syms.append(item)
         assert(ctypes.sizeof(item) == ctypes.sizeof(pylibelf.elf.Elf32_Rela)), f"Illegal item {item}"
-        self.size += ctypes.sizeof(item)
+        self._size += ctypes.sizeof(item)
         return pos
 
     def packsyms(self):
-        self.data = ctypes.create_string_buffer(self.size)
+        self._data = ctypes.create_string_buffer(self._size)
         index = 0
-        for item in self.syms:
+        for item in self._syms:
             arr = bytes(item)
             index = self._pack(arr, index)
-        return self.data
+        return self._data
 
     def get(self, pos):
-        assert(pos < self.size), f"Illegal offset into table storage"
-        item = pylibelf.elf.Elf32_Rela.from_address(ctypes.addressof(self.data) + pos)
+        assert(pos < self._size), f"Illegal offset into table storage"
+        item = pylibelf.elf.Elf32_Rela.from_address(ctypes.addressof(self._data) + pos)
         return item

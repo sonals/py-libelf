@@ -37,10 +37,9 @@ def write_Rela(melf, strtab, symtab, textindex, dynsymindex):
     # Some random location in the text segment
     addr = 8
     index = 0
-    while (pos < symtab.space()):
-        sym = symtab.get(pos)
+
+    for item in symtab:
         rtab.add(pylibelf.elf.Elf32_Rela(addr, pylibelf.elf.ELF32_R_INFO(index, pylibelf.elf.R_M32R_32_RELA), 0))
-        pos += ctypes.sizeof(pylibelf.elf.Elf32_Sym)
         # Another random location in text segment
         addr += 16
         index += 1
