@@ -31,14 +31,28 @@ def validate_ELF(elfname, goldname):
         goldsig = hashlib.md5(gold).hexdigest()
     assert(sig == goldsig), "ELF headers mismatch for " + elfname
 
-def dump_section_contents(scn):
-    data = ctypes.string_at(scn.contents.d_buf, scn.contents.d_size)
-    for index in range(scn.contents.d_size):
+def dump_section_contents(scn_data):
+    data = ctypes.string_at(scn_data.contents.d_buf, scn_data.contents.d_size)
+    for index in range(scn_data.contents.d_size):
         if (index % 16 == 0):
             print()
         print(f"{hex(data[index])} ", end = '')
 
     print()
+
+def dump_dynsym(scn_data):
+    symtab = ElfSymbolTable(scn_data.contents.d_buf, scn_data.contents.d_size)
+    index = 0
+    for item in symtab:
+        print(f"[{ index}] {item.st_name} {item.st_value} {item.st_size} {item.st_info} {item.st_other} {item.st_shndx}")
+        index += 1
+
+def dump_dynrela(scn_data):
+    relatab = ElfRelaTable(scn_data.contents.d_buf, scn_data.contents.d_size)
+    index = 0
+    for item in relatab:
+        print(f"[{ index}] {item.r_offset} {item.r_info} {item.r_addend}")
+        index += 1
 
 def read_ELF(elfname):
     """
@@ -62,7 +76,12 @@ def read_ELF(elfname):
         scn_data = curr.elf_getdata()
         assert(scn_data.contents.d_size == curr_shdr.contents.sh_size)
         print(f"[ {index}] {name} {hex(curr_shdr.contents.sh_size)} {hex(curr_shdr.contents.sh_addralign)}")
-        dump_section_contents(scn_data)
+        if (name == ".dynsym"):
+            dump_dynsym(scn_data)
+        elif (name == ".rela.dyn"):
+            dump_dynrela(scn_data)
+        else:
+            dump_section_contents(scn_data)
         curr = melf.elf_nextscn(curr)
         index += 1
 
@@ -89,9 +108,13 @@ class ElfStringTable:
         if (data == None):
             return
         self._data = ctypes.string_at(data, size)
+        # Virtual dispatch to class specific deserialize implementation
+        self._populate()
+
+    def _populate(self):
         # Populate our syms list
         pos = 0
-        while (pos < size):
+        while (pos < self._size):
             item = self.get(pos)
             self._syms.append(item)
             pos += len(item)
@@ -99,10 +122,12 @@ class ElfStringTable:
             pos += 1
 
     # Support len() operator on the table e.g. len(mystab)
+    # Inherited by the derived classes
     def __len__(self):
         return len(self._syms)
 
     # Support indexing into the table e.g. mystab[i]
+    # Inherited by the derived classes
     def __getitem__(self, index):
         return self._syms[index]
 
@@ -112,6 +137,7 @@ class ElfStringTable:
         self._size += (len(item) + 1)
         return pos
 
+    # Used by all derived classes as well
     def _pack(self, arr, index):
         subdata = ctypes.cast(ctypes.addressof(self._data) + index, ctypes.c_void_p)
         ctypes.memmove(subdata, arr, len(arr))
@@ -151,6 +177,8 @@ class ElfSymbolTable(ElfStringTable):
         super().__init__(data, size)
         if (self._data == None):
             return
+
+    def _populate(self):
         # Populate our syms list
         pos = 0
         while (pos < self._size):
@@ -174,7 +202,7 @@ class ElfSymbolTable(ElfStringTable):
 
     def get(self, pos):
         assert(pos < self._size), f"Illegal offset into table storage"
-        item = pylibelf.elf.Elf32_Sym.from_address(ctypes.addressof(self._data) + pos)
+        item = pylibelf.elf.Elf32_Sym.from_buffer_copy(self._data, pos)
         return item
 
 class ElfRelaTable(ElfStringTable):
@@ -186,6 +214,8 @@ class ElfRelaTable(ElfStringTable):
         super().__init__(data, size)
         if (self._data == None):
             return
+
+    def _populate(self):
         # Populate our syms list
         pos = 0
         while (pos < self._size):
@@ -209,5 +239,5 @@ class ElfRelaTable(ElfStringTable):
 
     def get(self, pos):
         assert(pos < self._size), f"Illegal offset into table storage"
-        item = pylibelf.elf.Elf32_Rela.from_address(ctypes.addressof(self._data) + pos)
+        item = pylibelf.elf.Elf32_Rela.from_buffer_copy(self._data, pos)
         return item
