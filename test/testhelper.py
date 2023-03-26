@@ -175,8 +175,6 @@ class ElfSymbolTable(ElfStringTable):
     """
     def __init__(self, data = None, size = 0):
         super().__init__(data, size)
-        if (self._data == None):
-            return
 
     def _populate(self):
         # Populate our syms list
@@ -188,7 +186,6 @@ class ElfSymbolTable(ElfStringTable):
     def add(self, item):
         pos = self._size
         self._syms.append(item)
-        assert(ctypes.sizeof(item) == ctypes.sizeof(pylibelf.elf.Elf32_Sym)), f"Illegal item {item}"
         self._size += ctypes.sizeof(item)
         return pos
 
@@ -205,15 +202,13 @@ class ElfSymbolTable(ElfStringTable):
         item = pylibelf.elf.Elf32_Sym.from_buffer_copy(self._data, pos)
         return item
 
-class ElfRelaTable(ElfStringTable):
+class ElfRelaTable(ElfSymbolTable):
     """
     Helper data structure to store and pack Elf32_Rela which is later
     used to build ELF .rela.dyn section
     """
     def __init__(self, data = None, size = 0):
         super().__init__(data, size)
-        if (self._data == None):
-            return
 
     def _populate(self):
         # Populate our syms list
@@ -221,21 +216,6 @@ class ElfRelaTable(ElfStringTable):
         while (pos < self._size):
             self._syms.append(self.get(pos))
             pos += ctypes.sizeof(pylibelf.elf.Elf32_Rela)
-
-    def add(self, item):
-        pos = self._size
-        self._syms.append(item)
-        assert(ctypes.sizeof(item) == ctypes.sizeof(pylibelf.elf.Elf32_Rela)), f"Illegal item {item}"
-        self._size += ctypes.sizeof(item)
-        return pos
-
-    def packsyms(self):
-        self._data = ctypes.create_string_buffer(self._size)
-        index = 0
-        for item in self._syms:
-            arr = bytes(item)
-            index = self._pack(arr, index)
-        return self._data
 
     def get(self, pos):
         assert(pos < self._size), f"Illegal offset into table storage"
